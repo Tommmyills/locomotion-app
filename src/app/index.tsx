@@ -27,7 +27,7 @@ export default function SplashScreenPage() {
         className="flex-1 items-center justify-center"
       >
         <Image
-          source={require("../../public/image-1769241623.png")}
+          source={require("../../public/image-1769267615.png")}
           style={{
             width: width * 0.85,
             height: height * 0.5,
