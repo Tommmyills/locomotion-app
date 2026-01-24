@@ -1,4 +1,4 @@
-# LocalPromote
+# LOCO•MOTION
 
 An Airbnb-style marketplace for local influencer ad slots. Businesses can book fixed social media post slots from trusted local creators.
 

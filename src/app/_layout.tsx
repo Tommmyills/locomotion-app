@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 // Custom light theme with black/white palette
-const LocalPromoteTheme = {
+const LocoMotionTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
@@ -31,7 +31,7 @@ const LocalPromoteTheme = {
 
 function RootLayoutNav() {
   return (
-    <ThemeProvider value={LocalPromoteTheme}>
+    <ThemeProvider value={LocoMotionTheme}>
       <Stack
         screenOptions={{
           headerStyle: {
@@ -49,7 +49,7 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="role-select" options={{ headerShown: false }} />
-        <Stack.Screen name="business/index" options={{ title: 'LocalPromote', headerBackVisible: false }} />
+        <Stack.Screen name="business/index" options={{ title: 'LOCO•MOTION', headerBackVisible: false }} />
         <Stack.Screen name="business/creator/[id]" options={{ title: 'Creator Profile' }} />
         <Stack.Screen name="business/booking/[slotId]" options={{ title: 'Book Slot' }} />
         <Stack.Screen name="business/confirmation" options={{ title: 'Booking Confirmed', headerBackVisible: false }} />

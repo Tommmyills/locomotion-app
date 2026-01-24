@@ -40,9 +40,9 @@ export default function LandingScreen() {
         {/* Header */}
         <Animated.View entering={FadeIn.delay(200).duration(600)} className="items-center mt-12">
           <View className="w-20 h-20 bg-black rounded-2xl items-center justify-center mb-4">
-            <Text className="text-white text-3xl font-bold">LP</Text>
+            <Text className="text-white text-2xl font-bold">LM</Text>
           </View>
-          <Text className="text-black text-3xl font-bold">LocalPromote</Text>
+          <Text className="text-black text-2xl font-bold tracking-wider">LOCO•MOTION</Text>
           <Text className="text-gray-500 text-base mt-2">
             Influencer ads made simple
           </Text>
