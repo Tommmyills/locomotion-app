@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { Sparkles, Building2, ChevronRight, User } from "lucide-react-native";
 import useAppStore from "@/lib/state/app-store";
 import * as Haptics from "expo-haptics";
@@ -74,7 +74,7 @@ export default function LandingScreen() {
 
         {/* Two Clear CTAs */}
         <Animated.View
-          entering={FadeInDown.delay(600).duration(600)}
+          entering={FadeIn.delay(400).duration(600)}
           className="flex-1 justify-center"
         >
           {/* Creator CTA */}
@@ -150,7 +150,7 @@ export default function LandingScreen() {
 
         {/* Trust Badge */}
         <Animated.View
-          entering={FadeInDown.delay(800).duration(600)}
+          entering={FadeIn.delay(600).duration(600)}
           className="items-center pt-4"
         >
           <Text className="text-gray-400 text-xs text-center">
