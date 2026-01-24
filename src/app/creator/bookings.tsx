@@ -1,9 +1,9 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Calendar, CheckCircle, Clock, Upload } from "lucide-react-native";
+import { Calendar, CheckCircle, Clock, Upload, Shield, ExternalLink, Zap, Lightbulb } from "lucide-react-native";
 import { SlotTypeBadge } from "@/components/SlotCard";
 import { PillButton } from "@/components/PillButton";
 import useAppStore from "@/lib/state/app-store";
@@ -16,6 +16,13 @@ function formatDate(dateString: string): string {
     day: "numeric",
   });
 }
+
+// Local posting tips for Albuquerque creators
+const postingTips = [
+  "Tag location: Nob Hill, Old Town, or UNM",
+  "Best times: 11am-1pm or 7-9pm MST",
+  "Use #ABQ #505 #Albuquerque #BurqueFood",
+];
 
 export default function CreatorBookingsScreen() {
   const router = useRouter();
@@ -100,12 +107,42 @@ export default function CreatorBookingsScreen() {
                         </View>
                       </View>
 
+                      {/* Local Post Helper Tips */}
+                      {!booking.proofUrl && (
+                        <View
+                          className="bg-blue-50 rounded-xl p-3 mb-4"
+                          style={{
+                            borderWidth: 1,
+                            borderColor: "rgba(37, 99, 235, 0.15)",
+                          }}
+                        >
+                          <View className="flex-row items-center mb-2">
+                            <Lightbulb size={14} color="#2563eb" />
+                            <Text className="text-blue-800 font-medium text-xs ml-1">
+                              Local Post Tips
+                            </Text>
+                          </View>
+                          {postingTips.map((tip, i) => (
+                            <Text key={i} className="text-blue-600 text-xs mb-0.5">
+                              • {tip}
+                            </Text>
+                          ))}
+                        </View>
+                      )}
+
                       {booking.proofUrl ? (
-                        <View className="flex-row items-center bg-green-50 rounded-xl p-3">
-                          <CheckCircle size={18} color="#16a34a" />
-                          <Text className="text-green-700 text-sm ml-2">
-                            Proof uploaded - awaiting admin approval
-                          </Text>
+                        <View className="bg-amber-50 rounded-xl p-3" style={{ borderWidth: 1, borderColor: "rgba(217, 119, 6, 0.2)" }}>
+                          <View className="flex-row items-center">
+                            <Zap size={18} color="#d97706" />
+                            <View className="flex-1 ml-2">
+                              <Text className="text-amber-800 font-medium text-sm">
+                                Auto-Verifying Post
+                              </Text>
+                              <Text className="text-amber-600 text-xs">
+                                Checking your Instagram for the post...
+                              </Text>
+                            </View>
+                          </View>
                         </View>
                       ) : (
                         <PillButton
@@ -163,13 +200,26 @@ export default function CreatorBookingsScreen() {
                             ${booking.price}
                           </Text>
                           <View className="flex-row items-center mt-1">
-                            <CheckCircle size={12} color="#16a34a" />
+                            <Shield size={12} color="#16a34a" />
                             <Text className="text-green-600 text-xs ml-1">
-                              Completed
+                              Verified & Paid
                             </Text>
                           </View>
                         </View>
                       </View>
+
+                      {/* Proof Link */}
+                      {booking.proofUrl && (
+                        <Pressable
+                          onPress={() => Linking.openURL(booking.proofUrl!)}
+                          className="flex-row items-center mt-2 pt-2 border-t border-gray-200"
+                        >
+                          <ExternalLink size={12} color="#6b7280" />
+                          <Text className="text-gray-500 text-xs ml-1" numberOfLines={1}>
+                            View post
+                          </Text>
+                        </Pressable>
+                      )}
                     </View>
                   </Animated.View>
                 ))}

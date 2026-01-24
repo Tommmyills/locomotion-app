@@ -86,7 +86,7 @@ export default function RoleSelectScreen() {
           {step === "role" ? (
             <Animated.View entering={FadeInDown.duration(400)} className="flex-1">
               <Text className="text-black text-2xl font-bold mb-2">
-                How will you use LocalPromote?
+                How will you use LOCO•MOTION?
               </Text>
               <Text className="text-gray-500 text-base mb-8">
                 Select your role to get started

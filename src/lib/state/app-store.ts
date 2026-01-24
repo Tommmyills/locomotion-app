@@ -87,50 +87,50 @@ interface AppStore {
 // Generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-// Mock data for MVP
+// Mock data for MVP - Albuquerque creators
 const mockCreators: Creator[] = [
   {
     id: "c1",
     userId: "u1",
-    name: "Sarah Chen",
+    name: "Sofia Martinez",
     photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
     platform: "instagram",
-    followerCount: 45000,
-    bio: "Lifestyle & food content creator based in Austin. Love sharing local gems!",
-    city: "Austin",
+    followerCount: 38000,
+    bio: "ABQ lifestyle & New Mexican food creator. Sharing the Duke City's best spots!",
+    city: "Albuquerque",
     approved: true,
   },
   {
     id: "c2",
     userId: "u2",
-    name: "Marcus Rivera",
+    name: "Diego Romero",
     photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
-    platform: "tiktok",
-    followerCount: 125000,
-    bio: "Austin's fitness guy. Daily workout tips and local gym reviews.",
-    city: "Austin",
+    platform: "instagram",
+    followerCount: 52000,
+    bio: "Outdoor adventure & hiking in NM. From the Sandias to the Rio Grande.",
+    city: "Albuquerque",
     approved: true,
   },
   {
     id: "c3",
     userId: "u3",
-    name: "Emma Thompson",
+    name: "Mia Chavez",
     photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
     platform: "instagram",
-    followerCount: 32000,
-    bio: "Fashion & beauty blogger. Supporting Austin small businesses.",
-    city: "Austin",
+    followerCount: 28000,
+    bio: "Fashion & beauty in the 505. Supporting local Burque businesses.",
+    city: "Albuquerque",
     approved: true,
   },
   {
     id: "c4",
     userId: "u4",
-    name: "Jake Morrison",
+    name: "Carlos Sanchez",
     photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
-    platform: "facebook",
-    followerCount: 18000,
-    bio: "Local food critic and restaurant reviewer. Eat local!",
-    city: "Austin",
+    platform: "instagram",
+    followerCount: 21000,
+    bio: "ABQ food & chile enthusiast. Red or green? Always Christmas!",
+    city: "Albuquerque",
     approved: true,
   },
   {
@@ -141,7 +141,7 @@ const mockCreators: Creator[] = [
     platform: "instagram",
     followerCount: 8000,
     bio: "New creator waiting for approval",
-    city: "Austin",
+    city: "Albuquerque",
     approved: false,
   },
 ];
@@ -168,8 +168,8 @@ const useAppStore = create<AppStore>()(
       creators: mockCreators,
       adSlots: mockSlots,
       bookings: [],
-      cities: ["Austin"],
-      selectedCity: "Austin",
+      cities: ["Albuquerque"],
+      selectedCity: "Albuquerque",
 
       // Auth actions
       setCurrentUser: (user) => set({ currentUser: user, isAuthenticated: !!user }),
@@ -181,7 +181,7 @@ const useAppStore = create<AppStore>()(
           name,
           email,
           role,
-          city: "Austin",
+          city: "Albuquerque",
         };
 
         // If registering as a creator, create a creator profile (pending approval)
@@ -194,7 +194,7 @@ const useAppStore = create<AppStore>()(
             platform: "instagram",
             followerCount: 5000,
             bio: "New creator on LocalPromote",
-            city: "Austin",
+            city: "Albuquerque",
             approved: false,
           };
           set({

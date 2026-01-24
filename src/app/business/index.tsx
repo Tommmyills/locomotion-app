@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { MapPin, LogOut, ShoppingBag } from "lucide-react-native";
+import { MapPin, LogOut, ShoppingBag, Instagram } from "lucide-react-native";
 import { CreatorCard } from "@/components/CreatorCard";
 import { PillButton } from "@/components/PillButton";
 import useAppStore from "@/lib/state/app-store";
@@ -86,7 +86,7 @@ export default function BusinessHomeScreen() {
           >
             <Image
               source={{
-                uri: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800",
+                uri: "https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800",
               }}
               className="w-full h-40"
               resizeMode="cover"
@@ -102,10 +102,10 @@ export default function BusinessHomeScreen() {
               }}
             >
               <Text className="text-white font-bold text-lg">
-                Promote your business locally
+                Promote your business in ABQ
               </Text>
               <Text className="text-gray-200 text-sm">
-                Book ad slots from trusted creators
+                Book local creators • Fixed prices • Verified posts
               </Text>
             </View>
           </View>
@@ -174,9 +174,12 @@ export default function BusinessHomeScreen() {
                     >
                       {creator.name}
                     </Text>
-                    <Text className="text-gray-500 text-sm capitalize">
-                      {creator.platform} • {formatFollowers(creator.followerCount)}
-                    </Text>
+                    <View className="flex-row items-center mt-0.5">
+                      <Instagram size={12} color="#E1306C" />
+                      <Text className="text-gray-500 text-sm ml-1">
+                        {formatFollowers(creator.followerCount)}
+                      </Text>
+                    </View>
                     <Text className="text-gray-400 text-xs mt-1" numberOfLines={1}>
                       {creator.bio}
                     </Text>

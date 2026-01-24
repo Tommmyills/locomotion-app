@@ -1,29 +1,64 @@
 # LOCO•MOTION
 
-An Airbnb-style marketplace for local influencer ad slots. Businesses can book fixed social media post slots from trusted local creators.
+Albuquerque's local influencer marketplace. A streamlined platform connecting local businesses with trusted creators for authentic social media promotions.
 
-## Core Features
+## Core Concept
 
-### Roles
-1. **Business** - Browse creators, book ad slots, pay for promotions
-2. **Creator** - Offer ad slots (Story/Reel/Post), manage availability, upload proof of posts
-3. **Admin** - Approve creators, review proof submissions, mark bookings complete
+LOCO•MOTION is a local-only influencer marketplace that removes friction from influencer marketing:
+- **No negotiations** - Fixed prices set by creators
+- **No messaging back-and-forth** - Book instantly like Airbnb
+- **No manual verification** - Posts are auto-verified
+- **City-by-city expansion** - Starting with Albuquerque
 
-### User Flows
+## User Flows
 
-**Business Flow:**
-1. Select city → View creators → Select creator → View available slots
-2. Select slot → Review booking details → Pay (Stripe Checkout)
-3. Receive confirmation → View booking in "My Bookings"
+### Creator Flow (Refined)
+1. Tap "Earn as a Local Creator" on home screen
+2. Connect Instagram → Profile auto-generated (photo, handle, followers, engagement)
+3. Set prices using slider controls with suggested ranges based on follower count
+4. Go live immediately and become bookable
 
-**Creator Flow:**
-1. Register → Await admin approval
-2. Once approved: Add ad slots (type, price, date)
-3. When booked: Upload proof of post → Await admin completion
+### Business Flow (Refined)
+1. Tap "Promote My Business" on home screen
+2. Browse local creators (no signup required) with clear prices
+3. Select creator → Choose ad slot & date
+4. Checkout with account creation at payment
+5. Receive Local Post Helper tips for ABQ-specific optimization
 
-**Admin Flow:**
-1. Review pending creator applications → Approve/Reject
-2. Review bookings with proof → Mark as complete
+### Money & Trust
+- Businesses pay at booking
+- Platform holds funds (10% fee)
+- Creators post within agreed window
+- Posts are automatically verified
+- Creators paid out after verification
+
+## Features
+
+### Home Screen
+- Two clear CTAs: "Earn as a Local Creator" and "Promote My Business"
+- Trust badges showing verified posts and fixed pricing
+
+### Creator Onboarding
+- Instagram connect flow (simulated)
+- Auto-generated profile from IG data
+- Slider-based pricing with suggested ranges
+- Estimated earnings calculator
+
+### Business Browse
+- Browse creators before signup
+- See follower counts, prices, and availability
+- Checkout-first experience (Airbnb style)
+- Local Post Helper tips after booking
+
+### Local Post Helper
+City-specific posting tips shared with creators:
+- Best posting times for Albuquerque
+- Local hashtags (#ABQ, #505, #Albuquerque, #BurqueFood)
+- Geotag recommendations (Nob Hill, Old Town, UNM)
+
+### Auto-Verification UI
+- Visual indicator showing post verification in progress
+- Automatic payout trigger on verification
 
 ## Tech Stack
 
@@ -33,59 +68,66 @@ An Airbnb-style marketplace for local influencer ad slots. Businesses can book f
 - NativeWind / TailwindCSS (styling)
 - React Native Reanimated (animations)
 - Lucide React Native (icons)
+- Expo Haptics (tactile feedback)
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── index.tsx              # Landing page
-│   ├── role-select.tsx        # Role selection & login
+│   ├── index.tsx              # Splash screen
+│   ├── home.tsx               # Landing with two CTAs
+│   ├── creator-onboard.tsx    # Instagram connect & pricing setup
+│   ├── browse-creators.tsx    # Business browse (no signup)
+│   ├── role-select.tsx        # Admin role selection
 │   ├── business/
-│   │   ├── index.tsx          # Business home (browse creators)
+│   │   ├── index.tsx          # Business dashboard
 │   │   ├── creator/[id].tsx   # Creator profile & slots
 │   │   ├── booking/[slotId].tsx # Booking & payment
-│   │   ├── confirmation.tsx   # Booking confirmation
+│   │   ├── confirmation.tsx   # Confirmation with Local Post Helper
 │   │   └── my-bookings.tsx    # Business's bookings
 │   ├── creator/
 │   │   ├── index.tsx          # Creator dashboard
 │   │   ├── slots.tsx          # Manage ad slots
-│   │   ├── bookings.tsx       # View bookings
+│   │   ├── bookings.tsx       # View bookings with tips
 │   │   └── upload-proof/[id].tsx # Upload proof of post
 │   └── admin/
 │       ├── index.tsx          # Admin dashboard
 │       ├── creators.tsx       # Approve creators
 │       └── bookings.tsx       # Manage all bookings
 ├── components/
-│   ├── PillButton.tsx         # Custom button with red beam animation
+│   ├── PillButton.tsx         # Animated button with haptics
 │   ├── CreatorCard.tsx        # Creator display cards
 │   └── SlotCard.tsx           # Ad slot display cards
 └── lib/
     └── state/
-        └── app-store.ts       # Zustand store with all app state
+        └── app-store.ts       # Zustand store
 ```
 
 ## Design System
 
-- **Colors:** Black and white only (high contrast, minimal)
-- **Buttons:** Pill-shaped with subtle 3D depth, red beam animation on press
-- **Cards:** Clean acrylic/glass effect with subtle shadows
-- **Layout:** Mobile-first, horizontal scrolling sections
+- **Colors:** Black, white, with red accents (#ef4444)
+- **Buttons:** Pill-shaped with subtle depth, red beam animation
+- **Cards:** Clean with subtle shadows, rounded corners
+- **Typography:** Bold headings, gray secondary text
 
 ## Data Models
 
 ### Creator
-- name, photo, platform (instagram/tiktok/facebook), followerCount, bio, city, approved
+- name, photo, platform, followerCount, bio, city, approved
 
 ### AdSlot
 - creatorId, type (story/reel/post), price, date, available
 
 ### Booking
-- businessId, creatorId, slotId, slotType, date, price, status (pending/completed), proofUrl
+- businessId, creatorId, slotId, slotType, date, price, status, proofUrl
 
 ## Mock Data
 
-The app includes pre-populated mock data:
-- 4 approved creators in Austin
+Pre-populated with Albuquerque creators:
+- Sofia Martinez (38K followers) - Lifestyle & food
+- Diego Romero (52K followers) - Outdoor adventure
+- Mia Chavez (28K followers) - Fashion & beauty
+- Carlos Sanchez (21K followers) - Food critic
 - 1 pending creator for admin testing
-- 10 available ad slots across creators
+- 10 available ad slots
