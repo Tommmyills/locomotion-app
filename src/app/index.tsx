@@ -55,7 +55,7 @@ export default function LandingScreen() {
         >
           <Image
             source={{
-              uri: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600",
+              uri: "https://images.composerapi.com/019beec7-0626-7599-b51a-5782d05789c9/assets/images/image_1769241505_1769241527335_019bef03-4427-73fa-baa6-cb2d3cd10887.png",
             }}
             className="w-full h-64 rounded-3xl"
             resizeMode="cover"
