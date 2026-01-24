@@ -20,10 +20,10 @@ export default function SplashScreenPage() {
 
   return (
     <View className="flex-1 bg-white items-center justify-center">
-      <Animated.View entering={FadeIn.duration(500)}>
+      <Animated.View entering={FadeIn.duration(800)}>
         <Image
-          source={require("../../public/image-1769241623.png")}
-          style={{ width: 280, height: 280 }}
+          source={require("../../public/image-1769267615.png")}
+          style={{ width: 320, height: 320 }}
           resizeMode="contain"
         />
       </Animated.View>

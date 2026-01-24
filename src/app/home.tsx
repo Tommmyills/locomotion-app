@@ -57,29 +57,19 @@ export default function LandingScreen() {
           </Pressable>
         </Animated.View>
 
-        {/* Header */}
-        <Animated.View entering={FadeIn.delay(200).duration(600)} className="items-center mt-4">
-          <View className="w-16 h-16 bg-black rounded-2xl items-center justify-center mb-3">
-            <Text className="text-white text-xl font-bold">LM</Text>
-          </View>
-          <Text className="text-black text-2xl font-bold tracking-wider">LOCO•MOTION</Text>
-          <Text className="text-gray-500 text-sm mt-1">
-            Albuquerque's Local Influencer Marketplace
-          </Text>
-        </Animated.View>
-
-        {/* Hero Image */}
+        {/* Hero Logo */}
         <Animated.View
-          entering={FadeInDown.delay(400).duration(600)}
-          className="items-center my-6"
+          entering={FadeIn.delay(200).duration(600)}
+          className="items-center my-4"
         >
           <Image
-            source={{
-              uri: "https://images.composerapi.com/019beec7-0626-7599-b51a-5782d05789c9/assets/images/image_1769241505_1769241527335_019bef03-4427-73fa-baa6-cb2d3cd10887.png",
-            }}
-            className="w-full h-52 rounded-3xl"
-            resizeMode="cover"
+            source={require("../../public/image-1769267615.png")}
+            style={{ width: 220, height: 220 }}
+            resizeMode="contain"
           />
+          <Text className="text-gray-500 text-sm mt-2">
+            Albuquerque's Local Influencer Marketplace
+          </Text>
         </Animated.View>
 
         {/* Two Clear CTAs */}
