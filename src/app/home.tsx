@@ -63,7 +63,7 @@ export default function LandingScreen() {
           className="items-center my-4"
         >
           <Image
-            source={require("../../public/image-1769267615.png")}
+            source={require("../assets/logo.png")}
             style={{ width: 220, height: 220 }}
             resizeMode="contain"
           />
