@@ -48,6 +48,7 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="role-select" options={{ headerShown: false }} />
         <Stack.Screen name="business/index" options={{ title: 'LOCO•MOTION', headerBackVisible: false }} />
         <Stack.Screen name="business/creator/[id]" options={{ title: 'Creator Profile' }} />

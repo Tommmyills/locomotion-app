@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { View, Image } from "react-native";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export default function SplashScreenPage() {
   const router = useRouter();
