@@ -274,6 +274,12 @@ const useAppStore = create<AppStore>()(
     {
       name: "localpromote-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      // Only persist user auth and bookings - always use fresh creator data
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+        isAuthenticated: state.isAuthenticated,
+        bookings: state.bookings,
+      }),
     }
   )
 );

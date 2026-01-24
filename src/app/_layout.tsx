@@ -50,6 +50,7 @@ function RootLayoutNav() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="role-select" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="creator-onboard" options={{ headerShown: false }} />
         <Stack.Screen name="browse-creators" options={{ headerShown: false }} />
         <Stack.Screen name="business/index" options={{ title: 'LOCO•MOTION', headerBackVisible: false }} />

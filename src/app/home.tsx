@@ -3,8 +3,9 @@ import { View, Text, Image, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { Sparkles, Building2, ChevronRight } from "lucide-react-native";
+import { Sparkles, Building2, ChevronRight, User } from "lucide-react-native";
 import useAppStore from "@/lib/state/app-store";
+import * as Haptics from "expo-haptics";
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -26,18 +27,38 @@ export default function LandingScreen() {
   }, [isAuthenticated, currentUser, router]);
 
   const handleCreatorFlow = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/creator-onboard");
   };
 
   const handleBusinessFlow = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/browse-creators");
+  };
+
+  const handleLogin = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/login");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 px-6 justify-between py-6">
+        {/* Top Bar with Sign In */}
+        <Animated.View entering={FadeIn.delay(100).duration(400)} className="flex-row justify-end mb-2">
+          <Pressable
+            onPress={handleLogin}
+            className="flex-row items-center bg-gray-100 rounded-full px-4 py-2"
+          >
+            <User size={16} color="#000" />
+            <Text className="text-black font-medium ml-2 text-sm">
+              {isAuthenticated ? "Account" : "Sign In"}
+            </Text>
+          </Pressable>
+        </Animated.View>
+
         {/* Header */}
-        <Animated.View entering={FadeIn.delay(200).duration(600)} className="items-center mt-8">
+        <Animated.View entering={FadeIn.delay(200).duration(600)} className="items-center mt-4">
           <View className="w-16 h-16 bg-black rounded-2xl items-center justify-center mb-3">
             <Text className="text-white text-xl font-bold">LM</Text>
           </View>
