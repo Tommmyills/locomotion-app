@@ -45,7 +45,7 @@ export default function LandingScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 px-6 justify-between py-6">
         {/* Top Bar with Sign In */}
-        <Animated.View entering={FadeIn.delay(100).duration(400)} className="flex-row justify-end mb-2">
+        <Animated.View entering={FadeIn.duration(300)} className="flex-row justify-end mb-2">
           <Pressable
             onPress={handleLogin}
             className="flex-row items-center bg-gray-100 rounded-full px-4 py-2"
@@ -59,7 +59,7 @@ export default function LandingScreen() {
 
         {/* Hero Logo */}
         <Animated.View
-          entering={FadeIn.delay(200).duration(600)}
+          entering={FadeIn.duration(300)}
           className="items-center my-4"
         >
           <Image
@@ -74,7 +74,7 @@ export default function LandingScreen() {
 
         {/* Two Clear CTAs */}
         <Animated.View
-          entering={FadeIn.delay(400).duration(600)}
+          entering={FadeIn.delay(100).duration(300)}
           className="flex-1 justify-center"
         >
           {/* Creator CTA */}
@@ -150,7 +150,7 @@ export default function LandingScreen() {
 
         {/* Trust Badge */}
         <Animated.View
-          entering={FadeIn.delay(600).duration(600)}
+          entering={FadeIn.delay(200).duration(300)}
           className="items-center pt-4"
         >
           <Text className="text-gray-400 text-xs text-center">

@@ -2,9 +2,8 @@ import React, { useEffect } from "react";
 import { View, Image, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 export default function SplashScreenPage() {
   const router = useRouter();
@@ -21,20 +20,15 @@ export default function SplashScreenPage() {
   }, [router]);
 
   return (
-    <View className="flex-1 bg-white">
-      <Animated.View
-        entering={FadeIn.duration(800)}
-        className="flex-1 items-center justify-center"
-      >
-        <Image
-          source={require("../../public/image-1769267615.png")}
-          style={{
-            width: width * 0.85,
-            height: height * 0.5,
-          }}
-          resizeMode="contain"
-        />
-      </Animated.View>
+    <View className="flex-1 bg-white items-center justify-center">
+      <Image
+        source={require("../../public/image-1769267615.png")}
+        style={{
+          width: width * 0.8,
+          height: width * 0.8,
+        }}
+        resizeMode="contain"
+      />
     </View>
   );
 }
