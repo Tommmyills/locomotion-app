@@ -66,16 +66,17 @@ export function PillButton({
     const localProgress = Math.min(progress / 0.25, 1);
     return {
       position: "absolute" as const,
-      top: 0,
+      top: -1,
       left: 0,
-      height: 2,
+      height: 3,
       width: `${localProgress * 100}%`,
       backgroundColor: "#ef4444",
       opacity: progress < 0.25 ? 1 : withTiming(0, { duration: 100 }),
       shadowColor: "#ef4444",
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.8,
-      shadowRadius: 4,
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      borderRadius: 2,
     };
   });
 
@@ -87,15 +88,16 @@ export function PillButton({
     return {
       position: "absolute" as const,
       top: 0,
-      right: 0,
-      width: 2,
+      right: -1,
+      width: 3,
       height: `${localProgress * 100}%`,
       backgroundColor: "#ef4444",
       opacity: progress >= 0.25 && progress < 0.5 ? 1 : withTiming(0, { duration: 100 }),
       shadowColor: "#ef4444",
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.8,
-      shadowRadius: 4,
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      borderRadius: 2,
     };
   });
 
@@ -106,16 +108,17 @@ export function PillButton({
     const localProgress = progress < 0.5 ? 0 : Math.min((progress - 0.5) / 0.25, 1);
     return {
       position: "absolute" as const,
-      bottom: 0,
+      bottom: -1,
       right: 0,
-      height: 2,
+      height: 3,
       width: `${localProgress * 100}%`,
       backgroundColor: "#ef4444",
       opacity: progress >= 0.5 && progress < 0.75 ? 1 : withTiming(0, { duration: 100 }),
       shadowColor: "#ef4444",
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.8,
-      shadowRadius: 4,
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      borderRadius: 2,
     };
   });
 
@@ -127,15 +130,16 @@ export function PillButton({
     return {
       position: "absolute" as const,
       bottom: 0,
-      left: 0,
-      width: 2,
+      left: -1,
+      width: 3,
       height: `${localProgress * 100}%`,
       backgroundColor: "#ef4444",
       opacity: progress >= 0.75 ? 1 : withTiming(0, { duration: 100 }),
       shadowColor: "#ef4444",
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.8,
-      shadowRadius: 4,
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      borderRadius: 2,
     };
   });
 
@@ -161,7 +165,7 @@ export function PillButton({
       <AnimatedView
         style={[buttonAnimatedStyle]}
         className={cn(
-          "rounded-full overflow-hidden",
+          "rounded-full",
           variant === "black" ? "bg-black" : "bg-white border border-black",
           sizeClasses[size],
           disabled && "opacity-50",
@@ -185,7 +189,7 @@ export function PillButton({
           }}
         />
 
-        {/* Red beam animations */}
+        {/* Red beam animations - positioned outside clipping */}
         <AnimatedView style={topBeamStyle} />
         <AnimatedView style={rightBeamStyle} />
         <AnimatedView style={bottomBeamStyle} />
