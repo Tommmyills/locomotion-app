@@ -162,48 +162,51 @@ export function PillButton({
       onPress={handlePress}
       disabled={disabled}
     >
-      <AnimatedView
-        style={[buttonAnimatedStyle]}
-        className={cn(
-          "rounded-full",
-          variant === "black" ? "bg-black" : "bg-white border border-black",
-          sizeClasses[size],
-          disabled && "opacity-50",
-          className
-        )}
-      >
-        {/* Inner shadow effect for 3D depth */}
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderTopColor: variant === "black" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.8)",
-            borderLeftColor: variant === "black" ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.6)",
-            borderRightColor: variant === "black" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.1)",
-            borderBottomColor: variant === "black" ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.15)",
-          }}
-        />
-
-        {/* Red beam animations - positioned outside clipping */}
+      {/* Outer wrapper for beam effects - no overflow hidden */}
+      <AnimatedView style={[buttonAnimatedStyle, { position: "relative" }]}>
+        {/* Red beam animations - positioned on outer wrapper */}
         <AnimatedView style={topBeamStyle} />
         <AnimatedView style={rightBeamStyle} />
         <AnimatedView style={bottomBeamStyle} />
         <AnimatedView style={leftBeamStyle} />
 
-        <Text
+        {/* Actual button with rounded corners */}
+        <View
           className={cn(
-            "font-semibold text-center",
-            textSizeClasses[size],
-            variant === "black" ? "text-white" : "text-black"
+            "rounded-full overflow-hidden",
+            variant === "black" ? "bg-black" : "bg-white border border-black",
+            sizeClasses[size],
+            disabled && "opacity-50",
+            className
           )}
         >
-          {title}
-        </Text>
+          {/* Inner shadow effect for 3D depth */}
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 999,
+              borderWidth: 1,
+              borderTopColor: variant === "black" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.8)",
+              borderLeftColor: variant === "black" ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.6)",
+              borderRightColor: variant === "black" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.1)",
+              borderBottomColor: variant === "black" ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.15)",
+            }}
+          />
+
+          <Text
+            className={cn(
+              "font-semibold text-center",
+              textSizeClasses[size],
+              variant === "black" ? "text-white" : "text-black"
+            )}
+          >
+            {title}
+          </Text>
+        </View>
       </AnimatedView>
     </Pressable>
   );
