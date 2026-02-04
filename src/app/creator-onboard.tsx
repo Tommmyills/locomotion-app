@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { Instagram, ArrowLeft, CheckCircle, Users, BarChart3, Sparkles, Clock, Image as ImageIcon, Film } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
+import { LaserButton } from "@/components/LaserButton";
 import { useCreateCreator, useCreateSlots } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import * as Haptics from "expo-haptics";
@@ -450,13 +451,11 @@ function PricingCard({
   const handleDecrease = () => {
     const newValue = Math.max(min, value - 25);
     onChange(newValue);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handleIncrease = () => {
     const newValue = Math.min(max, value + 25);
     onChange(newValue);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   return (
@@ -485,20 +484,10 @@ function PricingCard({
 
       {/* Price Control */}
       <View className="flex-row items-center justify-between bg-gray-50 rounded-xl p-2">
-        {/* Minus Button */}
-        <Pressable
-          onPress={handleDecrease}
-          className="w-14 h-14 bg-white rounded-xl items-center justify-center active:bg-gray-100"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
+        {/* Minus Button with Laser */}
+        <LaserButton onPress={handleDecrease} variant="white" size={56} borderRadius={12}>
           <Text className="text-2xl font-bold text-gray-400">−</Text>
-        </Pressable>
+        </LaserButton>
 
         {/* Price Display */}
         <View className="flex-1 items-center">
@@ -508,20 +497,10 @@ function PricingCard({
           </Text>
         </View>
 
-        {/* Plus Button */}
-        <Pressable
-          onPress={handleIncrease}
-          className="w-14 h-14 bg-black rounded-xl items-center justify-center active:bg-gray-800"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
+        {/* Plus Button with Laser */}
+        <LaserButton onPress={handleIncrease} variant="black" size={56} borderRadius={12}>
           <Text className="text-2xl font-bold text-white">+</Text>
-        </Pressable>
+        </LaserButton>
       </View>
     </View>
   );
