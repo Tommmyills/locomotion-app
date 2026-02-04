@@ -3,7 +3,7 @@ import { View, Text, Pressable, Image, TextInput, KeyboardAvoidingView, Platform
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { Instagram, ArrowLeft, CheckCircle, Users, BarChart3, Sparkles } from "lucide-react-native";
+import { Instagram, ArrowLeft, CheckCircle, Users, BarChart3, Sparkles, Clock, Image as ImageIcon, Film } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { useCreateCreator, useCreateSlots } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
@@ -366,9 +366,10 @@ function CreatorPricingStep({
         </Text>
 
         {/* Story Pricing */}
-        <PricingSlider
+        <PricingCard
           label="Instagram Story"
           description="24-hour visibility"
+          icon={<Clock size={20} color="#000" />}
           value={storyPrice}
           onChange={setStoryPrice}
           min={storyRange.min}
@@ -376,9 +377,10 @@ function CreatorPricingStep({
         />
 
         {/* Post Pricing */}
-        <PricingSlider
+        <PricingCard
           label="Instagram Post"
           description="Permanent feed post"
+          icon={<ImageIcon size={20} color="#000" />}
           value={postPrice}
           onChange={setPostPrice}
           min={postRange.min}
@@ -386,9 +388,10 @@ function CreatorPricingStep({
         />
 
         {/* Reel Pricing */}
-        <PricingSlider
+        <PricingCard
           label="Instagram Reel"
           description="Short-form video"
+          icon={<Film size={20} color="#000" />}
           value={reelPrice}
           onChange={setReelPrice}
           min={reelRange.min}
@@ -426,10 +429,11 @@ function CreatorPricingStep({
   );
 }
 
-// Pricing slider component
-function PricingSlider({
+// Pricing card component - fun and intuitive!
+function PricingCard({
   label,
   description,
+  icon,
   value,
   onChange,
   min,
@@ -437,47 +441,86 @@ function PricingSlider({
 }: {
   label: string;
   description: string;
+  icon: React.ReactNode;
   value: number;
   onChange: (value: number) => void;
   min: number;
   max: number;
 }) {
-  const percentage = ((value - min) / (max - min)) * 100;
+  const handleDecrease = () => {
+    const newValue = Math.max(min, value - 25);
+    onChange(newValue);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleIncrease = () => {
+    const newValue = Math.min(max, value + 25);
+    onChange(newValue);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
 
   return (
-    <View className="mb-6">
-      <View className="flex-row justify-between items-baseline mb-2">
-        <View>
+    <View
+      className="mb-4 bg-white rounded-2xl p-4"
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.05)",
+      }}
+    >
+      {/* Header */}
+      <View className="flex-row items-center mb-4">
+        <View className="w-10 h-10 bg-gray-100 rounded-xl items-center justify-center mr-3">
+          {icon}
+        </View>
+        <View className="flex-1">
           <Text className="text-black font-semibold text-base">{label}</Text>
           <Text className="text-gray-400 text-xs">{description}</Text>
         </View>
-        <Text className="text-black text-2xl font-bold">${value}</Text>
       </View>
 
-      {/* Custom slider track */}
-      <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <View
-          className="h-full bg-black rounded-full"
-          style={{ width: `${percentage}%` }}
-        />
-      </View>
-
-      {/* Pressable areas for adjustment */}
-      <View className="flex-row justify-between mt-2">
+      {/* Price Control */}
+      <View className="flex-row items-center justify-between bg-gray-50 rounded-xl p-2">
+        {/* Minus Button */}
         <Pressable
-          onPress={() => onChange(Math.max(min, value - 10))}
-          className="px-3 py-1 bg-gray-100 rounded-full"
+          onPress={handleDecrease}
+          className="w-14 h-14 bg-white rounded-xl items-center justify-center active:bg-gray-100"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
         >
-          <Text className="text-gray-600 text-sm">-$10</Text>
+          <Text className="text-2xl font-bold text-gray-400">−</Text>
         </Pressable>
-        <Text className="text-gray-400 text-xs self-center">
-          Suggested: ${min} - ${max}
-        </Text>
+
+        {/* Price Display */}
+        <View className="flex-1 items-center">
+          <Text className="text-black text-4xl font-bold">${value}</Text>
+          <Text className="text-gray-400 text-xs mt-1">
+            ${min} - ${max} suggested
+          </Text>
+        </View>
+
+        {/* Plus Button */}
         <Pressable
-          onPress={() => onChange(Math.min(max, value + 10))}
-          className="px-3 py-1 bg-gray-100 rounded-full"
+          onPress={handleIncrease}
+          className="w-14 h-14 bg-black rounded-xl items-center justify-center active:bg-gray-800"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
         >
-          <Text className="text-gray-600 text-sm">+$10</Text>
+          <Text className="text-2xl font-bold text-white">+</Text>
         </Pressable>
       </View>
     </View>
