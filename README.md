@@ -12,18 +12,26 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 
 ## User Flows
 
-### Creator Flow (Refined)
-1. Tap "Earn as a Local Creator" on home screen
-2. Connect Instagram → Profile auto-generated (photo, handle, followers, engagement)
-3. Set prices using slider controls with suggested ranges based on follower count
-4. Go live immediately and become bookable
+### Creator Flow
+1. Tap "I'm a Creator" on home screen
+2. Enter email + Instagram handle
+3. Confirm auto-generated profile (photo, handle, followers, engagement)
+4. Set prices using +/- controls with suggested ranges based on follower count
+5. Go live immediately and become bookable
 
-### Business Flow (Refined)
-1. Tap "Promote My Business" on home screen
-2. Browse local creators (no signup required) with clear prices
-3. Select creator → Choose ad slot & date
-4. Checkout with account creation at payment
-5. Receive Local Post Helper tips for ABQ-specific optimization
+### Business Flow
+1. Tap "I'm a Business" on home screen
+2. Enter business name + email to create account
+3. Get instant access to browse local creators
+4. Select creator → Choose ad slot & date
+5. Checkout with saved info
+6. Receive Local Post Helper tips for ABQ-specific optimization
+
+### Sign In Flow
+1. Tap "Already have an account? Sign In"
+2. Enter email only
+3. Auto-detected as Creator or Business based on existing account
+4. Redirected to appropriate dashboard
 
 ### Money & Trust
 - Businesses pay at booking
@@ -76,9 +84,11 @@ City-specific posting tips shared with creators:
 src/
 ├── app/
 │   ├── index.tsx              # Splash screen
-│   ├── home.tsx               # Landing with two CTAs
+│   ├── home.tsx               # Landing with two CTAs (Creator/Business)
+│   ├── login.tsx              # Simple email-based sign in
 │   ├── creator-onboard.tsx    # Instagram connect & pricing setup
-│   ├── browse-creators.tsx    # Business browse (no signup)
+│   ├── business-onboard.tsx   # Quick business account setup
+│   ├── browse-creators.tsx    # Business browse with checkout modal
 │   ├── role-select.tsx        # Admin role selection
 │   ├── business/
 │   │   ├── index.tsx          # Business dashboard
@@ -97,11 +107,15 @@ src/
 │       └── bookings.tsx       # Manage all bookings
 ├── components/
 │   ├── PillButton.tsx         # Animated button with haptics
+│   ├── LaserButton.tsx        # Button with laser effect
 │   ├── CreatorCard.tsx        # Creator display cards
 │   └── SlotCard.tsx           # Ad slot display cards
 └── lib/
+    ├── auth-store.ts          # Auth persistence (Zustand + AsyncStorage)
+    ├── db-hooks.ts            # React Query hooks for Supabase
+    ├── supabase.ts            # Supabase client
     └── state/
-        └── app-store.ts       # Zustand store
+        └── app-store.ts       # App state store
 ```
 
 ## Design System

@@ -49,6 +49,7 @@ function RootLayoutNav() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="creator-onboard" options={{ headerShown: false }} />
         <Stack.Screen name="browse-creators" options={{ headerShown: false }} />
+        <Stack.Screen name="business-onboard" options={{ headerShown: false }} />
         <Stack.Screen name="business/index" options={{ title: 'LOCO•MOTION', headerBackVisible: false }} />
         <Stack.Screen name="business/creator/[id]" options={{ title: 'Creator Profile' }} />
         <Stack.Screen name="business/booking/[slotId]" options={{ title: 'Book Slot' }} />
