@@ -155,6 +155,51 @@ export function useCreateSlots() {
   });
 }
 
+export function useCreateSlot() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (slot: {
+      creator_id: string;
+      type: "story" | "post" | "reel";
+      price: number;
+      date: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("ad_slots")
+        .insert({ ...slot, available: true })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as DbAdSlot;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ad-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["creator-slots"] });
+    },
+  });
+}
+
+export function useDeleteSlot() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (slotId: string) => {
+      const { error } = await supabase
+        .from("ad_slots")
+        .delete()
+        .eq("id", slotId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ad-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["creator-slots"] });
+    },
+  });
+}
+
 // ============ BOOKINGS ============
 
 export function useBookings() {
