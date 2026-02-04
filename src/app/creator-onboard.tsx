@@ -6,7 +6,8 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { Instagram, ArrowLeft, CheckCircle, Users, BarChart3, Sparkles, Clock, Image as ImageIcon, Film } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { LaserButton } from "@/components/LaserButton";
-import { useCreateCreator, useCreateSlots } from "@/lib/db-hooks";
+import { useCreateCreator, useCreateSlots, useCreatorByEmail } from "@/lib/db-hooks";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/lib/auth-store";
 import * as Haptics from "expo-haptics";
 
@@ -303,6 +304,20 @@ function CreatorPricingStep({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
+      // First check if creator with this email already exists
+      const { data: existingCreator, error: fetchError } = await supabase
+        .from("creators")
+        .select("*")
+        .eq("email", email)
+        .single();
+
+      if (existingCreator && !fetchError) {
+        // Creator already exists, just log them in
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onComplete(existingCreator.id);
+        return;
+      }
+
       // Create creator in database
       const creator = await createCreator.mutateAsync({
         email: email,
