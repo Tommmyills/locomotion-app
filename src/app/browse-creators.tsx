@@ -1,41 +1,38 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, Image, TextInput, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, Image, TextInput, Modal, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { MapPin, ArrowLeft, Search, Instagram, Clock, Film, Image as ImageIcon, X, Check } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
-import useAppStore, { Creator, AdSlot, SlotType } from "@/lib/state/app-store";
+import { useCreators, useAdSlots, useCreateBooking, DbCreator, DbAdSlot } from "@/lib/db-hooks";
+import { useAuthStore } from "@/lib/auth-store";
 import * as Haptics from "expo-haptics";
 import { cn } from "@/lib/cn";
 
 export default function BrowseCreatorsScreen() {
   const router = useRouter();
-  const creators = useAppStore((s) => s.creators);
-  const adSlots = useAppStore((s) => s.adSlots);
-  const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const currentUser = useAppStore((s) => s.currentUser);
+  const { data: creators = [], isLoading: creatorsLoading } = useCreators();
+  const { data: adSlots = [], isLoading: slotsLoading } = useAdSlots();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<AdSlot | null>(null);
+  const [selectedCreator, setSelectedCreator] = useState<DbCreator | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<DbAdSlot | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Filter to Albuquerque and approved creators
-  const approvedCreators = creators.filter(
-    (c) => c.approved && c.city === "Albuquerque"
+  const isLoading = creatorsLoading || slotsLoading;
+
+  const filteredCreators = creators.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.instagram_handle?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredCreators = approvedCreators.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCreatorPress = (creator: Creator) => {
+  const handleCreatorPress = (creator: DbCreator) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCreator(creator);
   };
 
-  const handleSlotSelect = (slot: AdSlot) => {
+  const handleSlotSelect = (slot: DbAdSlot) => {
     if (!slot.available) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedSlot(slot);
@@ -64,13 +61,15 @@ export default function BrowseCreatorsScreen() {
     return count.toString();
   };
 
-  const getSlotIcon = (type: SlotType) => {
+  const getSlotIcon = (type: string) => {
     switch (type) {
       case "story":
         return <Clock size={16} color="#6b7280" />;
       case "reel":
         return <Film size={16} color="#6b7280" />;
       case "post":
+        return <ImageIcon size={16} color="#6b7280" />;
+      default:
         return <ImageIcon size={16} color="#6b7280" />;
     }
   };
@@ -80,10 +79,20 @@ export default function BrowseCreatorsScreen() {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading creators...</Text>
+      </SafeAreaView>
+    );
+  }
+
   // If viewing a creator's profile
   if (selectedCreator) {
     const creatorSlots = adSlots.filter(
-      (s) => s.creatorId === selectedCreator.id && s.available
+      (s) => s.creator_id === selectedCreator.id && s.available
     );
 
     return (
@@ -104,7 +113,7 @@ export default function BrowseCreatorsScreen() {
             <Animated.View entering={FadeIn.duration(400)} className="px-5 py-6">
               <View className="items-center mb-4">
                 <Image
-                  source={{ uri: selectedCreator.photo }}
+                  source={{ uri: selectedCreator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                   className="w-24 h-24 rounded-full mb-3"
                   resizeMode="cover"
                 />
@@ -113,21 +122,23 @@ export default function BrowseCreatorsScreen() {
                 </Text>
                 <View className="flex-row items-center mt-1">
                   <Instagram size={14} color="#E1306C" />
-                  <Text className="text-gray-500 text-sm ml-1 capitalize">
-                    {selectedCreator.platform} • {formatFollowers(selectedCreator.followerCount)} followers
+                  <Text className="text-gray-500 text-sm ml-1">
+                    {selectedCreator.instagram_handle} • {formatFollowers(selectedCreator.follower_count)} followers
                   </Text>
                 </View>
               </View>
 
-              <Text className="text-gray-600 text-center mb-4">
-                {selectedCreator.bio}
-              </Text>
+              {selectedCreator.bio && (
+                <Text className="text-gray-600 text-center mb-4">
+                  {selectedCreator.bio}
+                </Text>
+              )}
 
               {/* Trust Badge */}
               <View className="bg-green-50 rounded-xl px-4 py-3 flex-row items-center justify-center" style={{ borderWidth: 1, borderColor: "rgba(22, 163, 74, 0.2)" }}>
                 <Check size={16} color="#16a34a" />
                 <Text className="text-green-700 text-sm font-medium ml-2">
-                  Verified Albuquerque Creator
+                  Verified Local Creator
                 </Text>
               </View>
             </Animated.View>
@@ -308,11 +319,12 @@ export default function BrowseCreatorsScreen() {
           {filteredCreators.length === 0 ? (
             <View className="py-12 items-center">
               <Text className="text-gray-400">No creators found</Text>
+              <Text className="text-gray-400 text-sm mt-1">Check back soon!</Text>
             </View>
           ) : (
             filteredCreators.map((creator, index) => {
               const creatorSlots = adSlots.filter(
-                (s) => s.creatorId === creator.id && s.available
+                (s) => s.creator_id === creator.id && s.available
               );
               const lowestPrice = creatorSlots.length > 0
                 ? Math.min(...creatorSlots.map((s) => s.price))
@@ -341,7 +353,7 @@ export default function BrowseCreatorsScreen() {
                     >
                       <View className="flex-row">
                         <Image
-                          source={{ uri: creator.photo }}
+                          source={{ uri: creator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                           className="w-28 h-28"
                           resizeMode="cover"
                         />
@@ -352,12 +364,14 @@ export default function BrowseCreatorsScreen() {
                           <View className="flex-row items-center mt-1">
                             <Instagram size={12} color="#E1306C" />
                             <Text className="text-gray-500 text-sm ml-1">
-                              {formatFollowers(creator.followerCount)}
+                              {formatFollowers(creator.follower_count)}
                             </Text>
                           </View>
-                          <Text className="text-gray-400 text-xs mt-2" numberOfLines={2}>
-                            {creator.bio}
-                          </Text>
+                          {creator.bio && (
+                            <Text className="text-gray-400 text-xs mt-2" numberOfLines={2}>
+                              {creator.bio}
+                            </Text>
+                          )}
                           {lowestPrice !== null && (
                             <Text className="text-black font-semibold text-sm mt-2">
                               From ${lowestPrice}
@@ -386,23 +400,20 @@ function CheckoutModal({
   onClose,
   formatFollowers,
 }: {
-  creator: Creator;
-  slot: AdSlot | null;
+  creator: DbCreator;
+  slot: DbAdSlot | null;
   onClose: () => void;
   formatFollowers: (count: number) => string;
 }) {
   const router = useRouter();
-  const login = useAppStore((s) => s.login);
-  const createBooking = useAppStore((s) => s.createBooking);
-  const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const currentUser = useAppStore((s) => s.currentUser);
+  const createBooking = useCreateBooking();
+  const setBusinessInfo = useAuthStore((s) => s.setBusinessInfo);
+  const businessEmail = useAuthStore((s) => s.businessEmail);
+  const businessName = useAuthStore((s) => s.businessName);
 
-  const [step, setStep] = useState<"details" | "processing" | "success">(
-    isAuthenticated && currentUser?.role === "business" ? "details" : "details"
-  );
-  const [businessName, setBusinessName] = useState(currentUser?.name || "");
-  const [email, setEmail] = useState(currentUser?.email || "");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState<"details" | "success">("details");
+  const [name, setName] = useState(businessName || "");
+  const [email, setEmail] = useState(businessEmail || "");
 
   if (!slot) return null;
 
@@ -419,38 +430,30 @@ function CheckoutModal({
   };
 
   const handleCheckout = async () => {
-    if (!businessName.trim() || !email.trim()) return;
+    if (!name.trim() || !email.trim()) return;
 
-    setIsProcessing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // If not authenticated, create account first
-    if (!isAuthenticated) {
-      login(email.trim(), "business", businessName.trim());
+    try {
+      // Save business info for future bookings
+      setBusinessInfo(email.trim(), name.trim());
+
+      // Create the booking
+      await createBooking.mutateAsync({
+        business_name: name.trim(),
+        business_email: email.trim(),
+        creator_id: creator.id,
+        slot_id: slot.id,
+        slot_type: slot.type,
+        date: slot.date,
+        price: slot.price,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setStep("success");
+    } catch (error) {
+      console.error("Error creating booking:", error);
     }
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Get the current user from store (will be set by login)
-    const storeState = useAppStore.getState();
-    const userId = storeState.currentUser?.id || `business-${Date.now()}`;
-
-    // Create the booking
-    createBooking({
-      businessId: userId,
-      businessName: businessName.trim(),
-      creatorId: creator.id,
-      creatorName: creator.name,
-      slotId: slot.id,
-      slotType: slot.type,
-      date: slot.date,
-      price: slot.price,
-      status: "pending",
-    });
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setStep("success");
   };
 
   if (step === "success") {
@@ -472,10 +475,10 @@ function CheckoutModal({
             </Text>
 
             <PillButton
-              title="View My Bookings"
+              title="Done"
               onPress={() => {
                 onClose();
-                router.replace("/business");
+                router.replace("/home");
               }}
               variant="black"
               size="lg"
@@ -513,7 +516,7 @@ function CheckoutModal({
           >
             <View className="flex-row items-center mb-4">
               <Image
-                source={{ uri: creator.photo }}
+                source={{ uri: creator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                 className="w-12 h-12 rounded-full mr-3"
                 resizeMode="cover"
               />
@@ -542,29 +545,25 @@ function CheckoutModal({
           </View>
 
           {/* Business Details */}
-          {!isAuthenticated && (
-            <>
-              <Text className="text-black font-semibold mb-3">Your Details</Text>
-              <TextInput
-                value={businessName}
-                onChangeText={setBusinessName}
-                placeholder="Business name"
-                placeholderTextColor="#9ca3af"
-                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-base mb-3"
-                style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
-              />
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email address"
-                placeholderTextColor="#9ca3af"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-base mb-6"
-                style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
-              />
-            </>
-          )}
+          <Text className="text-black font-semibold mb-3">Your Details</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Business name"
+            placeholderTextColor="#9ca3af"
+            className="bg-gray-50 rounded-xl px-4 py-4 text-black text-base mb-3"
+            style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
+          />
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email address"
+            placeholderTextColor="#9ca3af"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            className="bg-gray-50 rounded-xl px-4 py-4 text-black text-base mb-6"
+            style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
+          />
 
           {/* Trust Badges */}
           <View className="flex-row justify-around mb-6">
@@ -583,11 +582,11 @@ function CheckoutModal({
           </View>
 
           <PillButton
-            title={isProcessing ? "Processing..." : `Pay $${total}`}
+            title={createBooking.isPending ? "Processing..." : `Pay $${total}`}
             onPress={handleCheckout}
             variant="black"
             size="lg"
-            disabled={isProcessing || !businessName.trim() || !email.trim()}
+            disabled={createBooking.isPending || !name.trim() || !email.trim()}
           />
 
           <Text className="text-gray-400 text-xs text-center mt-4">

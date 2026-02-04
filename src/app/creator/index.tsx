@@ -1,28 +1,25 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Calendar, DollarSign, LogOut, Package, Clock } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
-import useAppStore from "@/lib/state/app-store";
+import { useCreatorByEmail, useCreatorSlots, useCreatorBookings } from "@/lib/db-hooks";
+import { useAuthStore } from "@/lib/auth-store";
 
 export default function CreatorDashboardScreen() {
   const router = useRouter();
-  const currentUser = useAppStore((s) => s.currentUser);
-  const creators = useAppStore((s) => s.creators);
-  const adSlots = useAppStore((s) => s.adSlots);
-  const bookings = useAppStore((s) => s.bookings);
-  const logout = useAppStore((s) => s.logout);
+  const creatorId = useAuthStore((s) => s.creatorId);
+  const creatorEmail = useAuthStore((s) => s.creatorEmail);
+  const creatorName = useAuthStore((s) => s.creatorName);
+  const logoutCreator = useAuthStore((s) => s.logoutCreator);
 
-  // Find the creator profile for the current user
-  const myCreator = creators.find((c) => c.userId === currentUser?.id);
-  const mySlots = myCreator
-    ? adSlots.filter((s) => s.creatorId === myCreator.id)
-    : [];
-  const myBookings = myCreator
-    ? bookings.filter((b) => b.creatorId === myCreator.id)
-    : [];
+  const { data: myCreator, isLoading: creatorLoading } = useCreatorByEmail(creatorEmail ?? undefined);
+  const { data: mySlots = [], isLoading: slotsLoading } = useCreatorSlots(creatorId ?? undefined);
+  const { data: myBookings = [], isLoading: bookingsLoading } = useCreatorBookings(creatorId ?? undefined);
+
+  const isLoading = creatorLoading || slotsLoading || bookingsLoading;
 
   const pendingBookings = myBookings.filter((b) => b.status === "pending");
   const totalEarnings = myBookings
@@ -31,7 +28,7 @@ export default function CreatorDashboardScreen() {
   const availableSlots = mySlots.filter((s) => s.available).length;
 
   const handleLogout = () => {
-    logout();
+    logoutCreator();
     router.replace("/");
   };
 
@@ -43,7 +40,41 @@ export default function CreatorDashboardScreen() {
     router.push("/creator/bookings");
   };
 
-  // If user is not a creator yet, show setup flow
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading dashboard...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // If user is not logged in as creator
+  if (!creatorId || !creatorEmail) {
+    return (
+      <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+        <View className="flex-1 px-6 justify-center items-center">
+          <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
+            <Package size={40} color="#9ca3af" />
+          </View>
+          <Text className="text-black text-xl font-bold mb-2 text-center">
+            Not Logged In
+          </Text>
+          <Text className="text-gray-500 text-base text-center mb-8">
+            Please sign up as a creator to access the dashboard.
+          </Text>
+          <PillButton
+            title="Go Back"
+            onPress={() => router.replace("/")}
+            variant="black"
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // If creator profile not found
   if (!myCreator) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
@@ -52,36 +83,10 @@ export default function CreatorDashboardScreen() {
             <Package size={40} color="#9ca3af" />
           </View>
           <Text className="text-black text-xl font-bold mb-2 text-center">
-            Creator Profile Not Found
+            Profile Not Found
           </Text>
           <Text className="text-gray-500 text-base text-center mb-8">
-            Your creator profile is pending approval or hasn't been created yet.
-            Please contact an admin.
-          </Text>
-          <PillButton
-            title="Logout"
-            onPress={handleLogout}
-            variant="white"
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // If not approved yet
-  if (!myCreator.approved) {
-    return (
-      <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-        <View className="flex-1 px-6 justify-center items-center">
-          <View className="w-20 h-20 bg-yellow-50 rounded-full items-center justify-center mb-6">
-            <Clock size={40} color="#ca8a04" />
-          </View>
-          <Text className="text-black text-xl font-bold mb-2 text-center">
-            Pending Approval
-          </Text>
-          <Text className="text-gray-500 text-base text-center mb-8">
-            Your creator profile is being reviewed. You'll be notified once
-            approved.
+            Your creator profile couldn't be loaded. Please try again.
           </Text>
           <PillButton
             title="Logout"
@@ -101,7 +106,7 @@ export default function CreatorDashboardScreen() {
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Image
-                source={{ uri: myCreator.photo }}
+                source={{ uri: myCreator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                 className="w-14 h-14 rounded-full mr-3"
                 resizeMode="cover"
               />
@@ -242,10 +247,10 @@ export default function CreatorDashboardScreen() {
               >
                 <View>
                   <Text className="text-black font-medium">
-                    {booking.businessName}
+                    {booking.business_name}
                   </Text>
                   <Text className="text-gray-500 text-sm capitalize">
-                    {booking.slotType} • {formatDate(booking.date)}
+                    {booking.slot_type} • {formatDate(booking.date)}
                   </Text>
                 </View>
                 <View className="items-end">
