@@ -388,8 +388,8 @@ function CreatorPricingStep({
           icon={<Clock size={20} color="#000" />}
           value={storyPrice}
           onChange={setStoryPrice}
-          min={storyRange.min}
-          max={storyRange.max}
+          suggestedMin={storyRange.min}
+          suggestedMax={storyRange.max}
         />
 
         {/* Post Pricing */}
@@ -399,8 +399,8 @@ function CreatorPricingStep({
           icon={<ImageIcon size={20} color="#000" />}
           value={postPrice}
           onChange={setPostPrice}
-          min={postRange.min}
-          max={postRange.max}
+          suggestedMin={postRange.min}
+          suggestedMax={postRange.max}
         />
 
         {/* Reel Pricing */}
@@ -410,8 +410,8 @@ function CreatorPricingStep({
           icon={<Film size={20} color="#000" />}
           value={reelPrice}
           onChange={setReelPrice}
-          min={reelRange.min}
-          max={reelRange.max}
+          suggestedMin={reelRange.min}
+          suggestedMax={reelRange.max}
         />
 
         {/* Earnings Preview */}
@@ -452,25 +452,31 @@ function PricingCard({
   icon,
   value,
   onChange,
-  min,
-  max,
+  suggestedMin,
+  suggestedMax,
 }: {
   label: string;
   description: string;
   icon: React.ReactNode;
   value: number;
   onChange: (value: number) => void;
-  min: number;
-  max: number;
+  suggestedMin: number;
+  suggestedMax: number;
 }) {
+  // Fixed absolute limits - users can set any price they want within reason
+  const absoluteMin = 5;
+  const absoluteMax = 1000;
+
   const handleDecrease = () => {
-    const newValue = Math.max(min, value - 25);
+    const newValue = Math.max(absoluteMin, value - 25);
     onChange(newValue);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handleIncrease = () => {
-    const newValue = Math.min(max, value + 25);
+    const newValue = Math.min(absoluteMax, value + 25);
     onChange(newValue);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
@@ -508,7 +514,7 @@ function PricingCard({
         <View className="flex-1 items-center">
           <Text className="text-black text-4xl font-bold">${value}</Text>
           <Text className="text-gray-400 text-xs mt-1">
-            ${min} - ${max} suggested
+            ${suggestedMin} - ${suggestedMax} suggested
           </Text>
         </View>
 
