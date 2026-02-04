@@ -1,23 +1,27 @@
-import React from "react";
-import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Calendar, DollarSign, LogOut, Package, Clock } from "lucide-react-native";
+import { Calendar, DollarSign, LogOut, Package, Clock, Home, Building2, X } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { useCreatorByEmail, useCreatorSlots, useCreatorBookings } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
+import useAppStore from "@/lib/state/app-store";
+import * as Haptics from "expo-haptics";
 
 export default function CreatorDashboardScreen() {
   const router = useRouter();
   const creatorId = useAuthStore((s) => s.creatorId);
   const creatorEmail = useAuthStore((s) => s.creatorEmail);
-  const creatorName = useAuthStore((s) => s.creatorName);
   const logoutCreator = useAuthStore((s) => s.logoutCreator);
+  const logout = useAppStore((s) => s.logout);
 
   const { data: myCreator, isLoading: creatorLoading } = useCreatorByEmail(creatorEmail ?? undefined);
   const { data: mySlots = [], isLoading: slotsLoading } = useCreatorSlots(creatorId ?? undefined);
   const { data: myBookings = [], isLoading: bookingsLoading } = useCreatorBookings(creatorId ?? undefined);
+
+  const [showMenu, setShowMenu] = useState(false);
 
   const isLoading = creatorLoading || slotsLoading || bookingsLoading;
 
@@ -27,9 +31,23 @@ export default function CreatorDashboardScreen() {
     .reduce((sum, b) => sum + b.price, 0);
   const availableSlots = mySlots.filter((s) => s.available).length;
 
+  const handleGoHome = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowMenu(false);
+    router.replace("/home");
+  };
+
+  const handleSwitchToBusiness = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowMenu(false);
+    router.push("/business-onboard");
+  };
+
   const handleLogout = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     logoutCreator();
-    router.replace("/");
+    logout();
+    router.replace("/home");
   };
 
   const handleManageSlots = () => {
@@ -65,8 +83,8 @@ export default function CreatorDashboardScreen() {
             Please sign up as a creator to access the dashboard.
           </Text>
           <PillButton
-            title="Go Back"
-            onPress={() => router.replace("/")}
+            title="Go to Home"
+            onPress={() => router.replace("/home")}
             variant="black"
           />
         </View>
@@ -89,9 +107,9 @@ export default function CreatorDashboardScreen() {
             Your creator profile couldn't be loaded. Please try again.
           </Text>
           <PillButton
-            title="Logout"
-            onPress={handleLogout}
-            variant="white"
+            title="Go to Home"
+            onPress={() => router.replace("/home")}
+            variant="black"
           />
         </View>
       </SafeAreaView>
@@ -104,24 +122,33 @@ export default function CreatorDashboardScreen() {
         {/* Header */}
         <View className="px-5 pt-4 pb-6">
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowMenu(true);
+              }}
+              className="flex-row items-center flex-1"
+            >
               <Image
                 source={{ uri: myCreator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                 className="w-14 h-14 rounded-full mr-3"
                 resizeMode="cover"
               />
-              <View>
+              <View className="flex-1">
                 <Text className="text-gray-500 text-sm">Welcome back,</Text>
                 <Text className="text-black text-xl font-bold">
                   {myCreator.name}
                 </Text>
               </View>
-            </View>
+            </Pressable>
             <Pressable
-              onPress={handleLogout}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowMenu(true);
+              }}
               className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
             >
-              <LogOut size={20} color="#000" />
+              <Home size={20} color="#000" />
             </Pressable>
           </View>
         </View>
@@ -272,6 +299,80 @@ export default function CreatorDashboardScreen() {
 
         <View className="h-8" />
       </ScrollView>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={showMenu}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <Pressable
+          className="flex-1 bg-black/50 justify-end"
+          onPress={() => setShowMenu(false)}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View className="bg-white rounded-t-3xl px-5 pb-8 pt-4">
+              {/* Handle */}
+              <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-4" />
+
+              {/* Header */}
+              <View className="flex-row items-center justify-between mb-6">
+                <Text className="text-black text-xl font-bold">Menu</Text>
+                <Pressable
+                  onPress={() => setShowMenu(false)}
+                  className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+                >
+                  <X size={18} color="#000" />
+                </Pressable>
+              </View>
+
+              {/* Options */}
+              <Pressable
+                onPress={handleGoHome}
+                className="flex-row items-center p-4 bg-gray-50 rounded-xl mb-3"
+                style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
+              >
+                <View className="w-10 h-10 bg-black rounded-full items-center justify-center mr-3">
+                  <Home size={20} color="#fff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-black font-semibold">Go to Main Menu</Text>
+                  <Text className="text-gray-500 text-sm">Return to home screen</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={handleSwitchToBusiness}
+                className="flex-row items-center p-4 bg-gray-50 rounded-xl mb-3"
+                style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
+              >
+                <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3">
+                  <Building2 size={20} color="#000" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-black font-semibold">Switch to Business</Text>
+                  <Text className="text-gray-500 text-sm">Book creators for your business</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={handleLogout}
+                className="flex-row items-center p-4 bg-red-50 rounded-xl"
+                style={{ borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" }}
+              >
+                <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center mr-3">
+                  <LogOut size={20} color="#ef4444" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-red-600 font-semibold">Log Out</Text>
+                  <Text className="text-red-400 text-sm">Sign out of your account</Text>
+                </View>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
