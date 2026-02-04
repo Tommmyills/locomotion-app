@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +15,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ArrowLeft, User, Mail, Trash2 } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import useAppStore, { UserRole } from "@/lib/state/app-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { supabase } from "@/lib/supabase";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -25,29 +27,68 @@ export default function LoginScreen() {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const currentUser = useAppStore((s) => s.currentUser);
 
+  // Auth store for creator login
+  const loginCreator = useAuthStore((s) => s.loginCreator);
+  const logoutCreator = useAuthStore((s) => s.logoutCreator);
+  const creatorId = useAuthStore((s) => s.creatorId);
+  const creatorName = useAuthStore((s) => s.creatorName);
+  const creatorEmail = useAuthStore((s) => s.creatorEmail);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedRole, setSelectedRole] = useState<UserRole>("business");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("creator");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (name.trim() && email.trim()) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      login(email.trim(), selectedRole, name.trim());
+  const handleLogin = async () => {
+    if (!email.trim()) return;
 
-      // Navigate based on role
-      if (selectedRole === "business") {
-        router.replace("/business");
-      } else if (selectedRole === "creator") {
-        router.replace("/creator");
-      } else if (selectedRole === "admin") {
-        router.replace("/admin");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsLoading(true);
+
+    try {
+      // For creators, check if they exist in the database
+      if (selectedRole === "creator") {
+        const { data: existingCreator, error } = await supabase
+          .from("creators")
+          .select("*")
+          .eq("email", email.trim())
+          .single();
+
+        if (existingCreator && !error) {
+          // Found existing creator - log them in
+          loginCreator(existingCreator.id, existingCreator.email, existingCreator.name);
+          login(existingCreator.email, "creator", existingCreator.name);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace("/creator");
+          return;
+        } else {
+          // No creator found with this email - send to onboarding
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          router.push("/creator-onboard");
+          return;
+        }
       }
+
+      // For business/admin, use local auth
+      if (name.trim()) {
+        login(email.trim(), selectedRole, name.trim());
+        if (selectedRole === "business") {
+          router.replace("/business");
+        } else if (selectedRole === "admin") {
+          router.replace("/admin");
+        }
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     logout();
+    logoutCreator();
     router.replace("/home");
   };
 
@@ -56,11 +97,12 @@ export default function LoginScreen() {
     // Clear all stored data
     await AsyncStorage.clear();
     logout();
+    logoutCreator();
     router.replace("/home");
   };
 
   // If already logged in, show account screen
-  if (isAuthenticated && currentUser) {
+  if ((isAuthenticated && currentUser) || creatorId) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 px-6">
@@ -88,14 +130,14 @@ export default function LoginScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-black text-lg font-bold">
-                    {currentUser.name}
+                    {currentUser?.name ?? creatorName ?? "User"}
                   </Text>
-                  <Text className="text-gray-500 text-sm">{currentUser.email}</Text>
+                  <Text className="text-gray-500 text-sm">{currentUser?.email ?? creatorEmail ?? ""}</Text>
                 </View>
               </View>
               <View className="bg-black/5 rounded-xl px-4 py-2">
                 <Text className="text-gray-600 text-sm text-center capitalize">
-                  {currentUser.role} Account
+                  {currentUser?.role ?? "Creator"} Account
                 </Text>
               </View>
             </View>

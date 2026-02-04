@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, Image, Dimensions, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import useAppStore from "@/lib/state/app-store";
+import { useAuthStore } from "@/lib/auth-store";
 
 const { width } = Dimensions.get("window");
 
@@ -12,6 +14,11 @@ export default function SplashScreenPage() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
 
+  // Check both auth stores
+  const isAppAuthenticated = useAppStore((s) => s.isAuthenticated);
+  const currentUser = useAppStore((s) => s.currentUser);
+  const creatorId = useAuthStore((s) => s.creatorId);
+
   const handleImageLoad = () => {
     console.log("Splash image loaded!");
     setIsReady(true);
@@ -21,13 +28,34 @@ export default function SplashScreenPage() {
   useEffect(() => {
     if (!isReady) return;
 
-    // Navigate to home after 2.5 seconds once image is loaded
+    // Navigate after 2 seconds once image is loaded
     const timer = setTimeout(() => {
+      // Check if creator is logged in via authStore (Supabase-backed)
+      if (creatorId) {
+        router.replace("/creator");
+        return;
+      }
+
+      // Check if user is logged in via appStore
+      if (isAppAuthenticated && currentUser) {
+        if (currentUser.role === "business") {
+          router.replace("/business");
+        } else if (currentUser.role === "creator") {
+          router.replace("/creator");
+        } else if (currentUser.role === "admin") {
+          router.replace("/admin");
+        } else {
+          router.replace("/home");
+        }
+        return;
+      }
+
+      // Not logged in, go to home
       router.replace("/home");
-    }, 2500);
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [isReady, router]);
+  }, [isReady, router, creatorId, isAppAuthenticated, currentUser]);
 
   return (
     <View style={styles.container}>

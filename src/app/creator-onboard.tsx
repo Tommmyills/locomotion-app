@@ -9,6 +9,7 @@ import { LaserButton } from "@/components/LaserButton";
 import { useCreateCreator, useCreateSlots, useCreatorByEmail } from "@/lib/db-hooks";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/lib/auth-store";
+import useAppStore from "@/lib/state/app-store";
 import * as Haptics from "expo-haptics";
 
 type OnboardStep = "connect" | "confirm" | "pricing";
@@ -25,6 +26,7 @@ const placeholderPhotos = [
 export default function CreatorOnboardScreen() {
   const router = useRouter();
   const loginCreator = useAuthStore((s) => s.loginCreator);
+  const appStoreLogin = useAppStore((s) => s.login);
 
   const [step, setStep] = useState<OnboardStep>("connect");
   const [instagramHandle, setInstagramHandle] = useState("");
@@ -256,7 +258,9 @@ export default function CreatorOnboardScreen() {
             igData={igData}
             email={email}
             onComplete={(creatorId) => {
+              // Login to both auth stores for consistency
               loginCreator(creatorId, email, igData.name);
+              appStoreLogin(email, "creator", igData.name);
               router.replace("/creator");
             }}
           />
