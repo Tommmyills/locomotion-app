@@ -176,7 +176,9 @@ export function useCreateSlot() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ad-slots"] });
-      queryClient.invalidateQueries({ queryKey: ["creator-slots"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "creator-slots"
+      });
     },
   });
 }
@@ -194,8 +196,11 @@ export function useDeleteSlot() {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all queries that start with these keys
       queryClient.invalidateQueries({ queryKey: ["ad-slots"] });
-      queryClient.invalidateQueries({ queryKey: ["creator-slots"] });
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === "creator-slots"
+      });
     },
   });
 }
