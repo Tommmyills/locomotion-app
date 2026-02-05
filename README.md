@@ -16,16 +16,18 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 1. Tap "I'm a Creator" on home screen
 2. Enter email + Instagram handle
 3. Confirm auto-generated profile (photo, handle, followers, engagement)
-4. Set prices using +/- controls with suggested ranges based on follower count
-5. Go live immediately and become bookable
+4. Set prices for Stories, Posts, and Reels using +/- controls
+5. Go live immediately - you're always available for bookings
+6. View bookings and manage pricing from dashboard
 
 ### Business Flow
 1. Tap "I'm a Business" on home screen
 2. Enter business name + email to create account
-3. Get instant access to browse local creators
-4. Select creator → Choose ad slot & date
-5. Checkout with saved info
-6. Receive Local Post Helper tips for ABQ-specific optimization
+3. Browse local creators with their pricing
+4. Select creator → Choose content type (Story/Post/Reel)
+5. Pick the date you want the content posted
+6. Checkout with Stripe
+7. Receive Local Post Helper tips for ABQ-specific optimization
 
 ### Sign In Flow
 1. Tap "Already have an account? Sign In"
@@ -92,13 +94,14 @@ src/
 │   ├── role-select.tsx        # Admin role selection
 │   ├── business/
 │   │   ├── index.tsx          # Business dashboard
-│   │   ├── creator/[id].tsx   # Creator profile & slots
-│   │   ├── booking/[slotId].tsx # Booking & payment
+│   │   ├── creator/[id].tsx   # Creator profile with pricing options
+│   │   ├── booking/new.tsx    # New booking (select date & pay)
+│   │   ├── booking/[slotId].tsx # Legacy slot booking
 │   │   ├── confirmation.tsx   # Confirmation with Local Post Helper
 │   │   └── my-bookings.tsx    # Business's bookings
 │   ├── creator/
 │   │   ├── index.tsx          # Creator dashboard
-│   │   ├── slots.tsx          # Manage ad slots
+│   │   ├── slots.tsx          # Manage pricing (Story/Post/Reel)
 │   │   ├── bookings.tsx       # View bookings with tips
 │   │   └── upload-proof/[id].tsx # Upload proof of post
 │   └── admin/

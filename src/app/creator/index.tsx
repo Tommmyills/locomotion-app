@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Calendar, DollarSign, LogOut, Package, Clock, Home, Building2, X } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
-import { useCreatorByEmail, useCreatorSlots, useCreatorBookings } from "@/lib/db-hooks";
+import { useCreatorByEmail, useCreatorBookings } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import useAppStore from "@/lib/state/app-store";
 import * as Haptics from "expo-haptics";
@@ -23,18 +23,20 @@ export default function CreatorDashboardScreen() {
   const hasBusinessAccount = !!(businessEmail && businessName);
 
   const { data: myCreator, isLoading: creatorLoading } = useCreatorByEmail(creatorEmail ?? undefined);
-  const { data: mySlots = [], isLoading: slotsLoading } = useCreatorSlots(creatorId ?? undefined);
   const { data: myBookings = [], isLoading: bookingsLoading } = useCreatorBookings(creatorId ?? undefined);
 
   const [showMenu, setShowMenu] = useState(false);
 
-  const isLoading = creatorLoading || slotsLoading || bookingsLoading;
+  const isLoading = creatorLoading || bookingsLoading;
 
   const pendingBookings = myBookings.filter((b) => b.status === "pending");
   const totalEarnings = myBookings
     .filter((b) => b.status === "completed")
     .reduce((sum, b) => sum + b.price, 0);
-  const availableSlots = mySlots.filter((s) => s.available).length;
+  // Calculate potential earnings from prices
+  const avgPrice = myCreator ?
+    Math.round(((myCreator.story_price || 50) + (myCreator.post_price || 100) + (myCreator.reel_price || 150)) / 3) :
+    100;
 
   const handleGoHome = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -195,9 +197,9 @@ export default function CreatorDashboardScreen() {
             >
               <Calendar size={24} color="#000" />
               <Text className="text-black text-2xl font-bold mt-2">
-                {availableSlots}
+                {myBookings.length}
               </Text>
-              <Text className="text-gray-500 text-sm">Available Slots</Text>
+              <Text className="text-gray-500 text-sm">Total Bookings</Text>
             </View>
           </View>
         </Animated.View>
@@ -243,7 +245,7 @@ export default function CreatorDashboardScreen() {
           </Text>
 
           <PillButton
-            title="Manage Ad Slots"
+            title="Manage Pricing"
             onPress={handleManageSlots}
             variant="black"
             size="lg"
