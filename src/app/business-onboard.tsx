@@ -31,8 +31,15 @@ export default function BusinessOnboardScreen() {
   const setBusinessInfo = useAuthStore((s) => s.setBusinessInfo);
   const appStoreLogin = useAppStore((s) => s.login);
 
-  const [businessName, setBusinessName] = useState("");
-  const [email, setEmail] = useState("");
+  // Get existing info from auth store (in case they're already a creator)
+  const existingCreatorEmail = useAuthStore((s) => s.creatorEmail);
+  const existingCreatorName = useAuthStore((s) => s.creatorName);
+  const existingBusinessEmail = useAuthStore((s) => s.businessEmail);
+  const existingBusinessName = useAuthStore((s) => s.businessName);
+
+  // Pre-fill with existing info if available
+  const [businessName, setBusinessName] = useState(existingBusinessName || "");
+  const [email, setEmail] = useState(existingBusinessEmail || existingCreatorEmail || "");
   const [location, setLocation] = useState("");
 
   const handleContinue = () => {

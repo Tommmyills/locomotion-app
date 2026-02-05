@@ -17,6 +17,11 @@ export default function CreatorDashboardScreen() {
   const logoutCreator = useAuthStore((s) => s.logoutCreator);
   const logout = useAppStore((s) => s.logout);
 
+  // Check if they also have a business account
+  const businessEmail = useAuthStore((s) => s.businessEmail);
+  const businessName = useAuthStore((s) => s.businessName);
+  const hasBusinessAccount = !!(businessEmail && businessName);
+
   const { data: myCreator, isLoading: creatorLoading } = useCreatorByEmail(creatorEmail ?? undefined);
   const { data: mySlots = [], isLoading: slotsLoading } = useCreatorSlots(creatorId ?? undefined);
   const { data: myBookings = [], isLoading: bookingsLoading } = useCreatorBookings(creatorId ?? undefined);
@@ -40,7 +45,12 @@ export default function CreatorDashboardScreen() {
   const handleSwitchToBusiness = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowMenu(false);
-    router.push("/business-onboard");
+    // If they already have a business account, go straight to the dashboard
+    if (hasBusinessAccount) {
+      router.push("/business");
+    } else {
+      router.push("/business-onboard");
+    }
   };
 
   const handleLogout = () => {

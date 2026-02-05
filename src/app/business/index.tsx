@@ -18,6 +18,11 @@ export default function BusinessHomeScreen() {
   const logout = useAppStore((s) => s.logout);
   const currentUser = useAppStore((s) => s.currentUser);
 
+  // Check if they also have a creator account
+  const creatorId = useAuthStore((s) => s.creatorId);
+  const creatorEmail = useAuthStore((s) => s.creatorEmail);
+  const hasCreatorAccount = !!(creatorId && creatorEmail);
+
   const { data: creators = [], isLoading: creatorsLoading } = useCreators();
   const { data: adSlots = [], isLoading: slotsLoading } = useAdSlots();
 
@@ -40,7 +45,12 @@ export default function BusinessHomeScreen() {
   const handleSwitchToCreator = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowMenu(false);
-    router.push("/creator-onboard");
+    // If they already have a creator account, go straight to the dashboard
+    if (hasCreatorAccount) {
+      router.push("/creator");
+    } else {
+      router.push("/creator-onboard");
+    }
   };
 
   const handleLogout = () => {

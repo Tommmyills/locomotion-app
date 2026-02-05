@@ -28,9 +28,14 @@ export default function CreatorOnboardScreen() {
   const loginCreator = useAuthStore((s) => s.loginCreator);
   const appStoreLogin = useAppStore((s) => s.login);
 
+  // Get existing info from auth store (in case they're already a business)
+  const existingCreatorEmail = useAuthStore((s) => s.creatorEmail);
+  const existingBusinessEmail = useAuthStore((s) => s.businessEmail);
+
   const [step, setStep] = useState<OnboardStep>("connect");
   const [instagramHandle, setInstagramHandle] = useState("");
-  const [email, setEmail] = useState("");
+  // Pre-fill email if they're already signed up as a business
+  const [email, setEmail] = useState(existingCreatorEmail || existingBusinessEmail || "");
   const [igData, setIgData] = useState<{
     handle: string;
     name: string;
