@@ -31,7 +31,7 @@ export default function ManageSlotsScreen() {
   const creatorEmail = useAuthStore((s) => s.creatorEmail);
 
   const { data: myCreator } = useCreatorByEmail(creatorEmail ?? undefined);
-  const { data: mySlots = [], isLoading } = useCreatorSlots(creatorId ?? undefined);
+  const { data: mySlots = [], isLoading, refetch } = useCreatorSlots(creatorId ?? undefined);
   const createSlot = useCreateSlot();
   const deleteSlot = useDeleteSlot();
 
@@ -111,6 +111,8 @@ export default function ManageSlotsScreen() {
     try {
       await deleteSlot.mutateAsync(slotId);
       console.log("Slot deleted successfully");
+      // Force refetch to update UI
+      await refetch();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error("Error deleting slot:", error);
