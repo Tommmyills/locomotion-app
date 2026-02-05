@@ -70,6 +70,17 @@ export default function CreatorDashboardScreen() {
     router.push("/creator/bookings");
   };
 
+  const handlePendingBookingsAction = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (pendingBookings.length === 1) {
+      // Single pending booking → go straight to upload proof
+      router.push(`/creator/upload-proof/${pendingBookings[0].id}`);
+    } else {
+      // Multiple pending → go to filtered pending list
+      router.push("/creator/pending-bookings");
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -210,7 +221,7 @@ export default function CreatorDashboardScreen() {
             entering={FadeInDown.delay(100).duration(400)}
             className="px-5 mb-6"
           >
-            <Pressable onPress={handleViewBookings}>
+            <Pressable onPress={handlePendingBookingsAction}>
               <View
                 className="rounded-2xl bg-yellow-50 p-4 flex-row items-center"
                 style={{
@@ -227,7 +238,9 @@ export default function CreatorDashboardScreen() {
                     {pendingBookings.length > 1 ? "s" : ""}
                   </Text>
                   <Text className="text-gray-500 text-sm">
-                    Tap to view and upload proof
+                    {pendingBookings.length === 1
+                      ? "Tap to upload proof"
+                      : "Tap to view and take action"}
                   </Text>
                 </View>
               </View>
