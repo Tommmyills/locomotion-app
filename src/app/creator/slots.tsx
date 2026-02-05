@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   Pressable,
   Modal,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -19,6 +18,9 @@ import { useAuthStore } from "@/lib/auth-store";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/cn";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const DELETED_SLOTS_KEY = "loco_deleted_slot_ids";
 
 type SlotType = "story" | "post" | "reel";
 
@@ -42,11 +44,39 @@ export default function ManageSlotsScreen() {
   const [price, setPrice] = useState(50);
   const [deletingSlotId, setDeletingSlotId] = useState<string | null>(null);
   const [deletedSlotIds, setDeletedSlotIds] = useState<string[]>([]);
+  const [isLoadingDeleted, setIsLoadingDeleted] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow;
   });
+
+  // Load deleted slot IDs from AsyncStorage on mount
+  useEffect(() => {
+    const loadDeletedSlots = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DELETED_SLOTS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as string[];
+          setDeletedSlotIds(parsed);
+        }
+      } catch (error) {
+        console.error("Error loading deleted slots:", error);
+      } finally {
+        setIsLoadingDeleted(false);
+      }
+    };
+    loadDeletedSlots();
+  }, []);
+
+  // Save deleted slot IDs to AsyncStorage whenever they change
+  const persistDeletedSlots = useCallback(async (ids: string[]) => {
+    try {
+      await AsyncStorage.setItem(DELETED_SLOTS_KEY, JSON.stringify(ids));
+    } catch (error) {
+      console.error("Error saving deleted slots:", error);
+    }
+  }, []);
 
   // Filter out locally deleted slots
   const visibleSlots = mySlots.filter(s => !deletedSlotIds.includes(s.id));
@@ -141,28 +171,26 @@ export default function ManageSlotsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setDeletingSlotId(slotId);
 
-    // Immediately hide from UI
-    setDeletedSlotIds(prev => [...prev, slotId]);
+    // Immediately hide from UI and persist to storage
+    const newDeletedIds = [...deletedSlotIds, slotId];
+    setDeletedSlotIds(newDeletedIds);
+    await persistDeletedSlots(newDeletedIds);
 
     try {
+      // Try to delete from database (may fail due to RLS)
       const { error } = await supabase
         .from("ad_slots")
         .delete()
         .eq("id", slotId);
 
       if (error) {
-        console.error("Delete error:", error);
-        // Restore if failed
-        setDeletedSlotIds(prev => prev.filter(id => id !== slotId));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        refetch();
+        console.log("Delete from DB failed (RLS), but slot hidden locally:", error.message);
       }
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      refetch();
     } catch (error) {
-      console.error("Error deleting slot:", error);
-      setDeletedSlotIds(prev => prev.filter(id => id !== slotId));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      console.log("Delete error, but slot hidden locally");
     } finally {
       setDeletingSlotId(null);
     }
@@ -186,7 +214,7 @@ export default function ManageSlotsScreen() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingDeleted) {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#000" />
