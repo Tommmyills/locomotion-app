@@ -16,16 +16,17 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 1. Tap "I'm a Creator" on home screen
 2. Enter email + Instagram handle
 3. Confirm auto-generated profile (photo, handle, followers, engagement)
-4. Set prices for Stories, Posts, and Reels using +/- controls
-5. Go live immediately - you're always available for bookings
-6. View bookings and manage pricing from dashboard
+4. Set default prices for Stories, Posts, and Reels
+5. Go live immediately
+6. Add available slots when ready to create content (pick type + date with wheel picker)
+7. Manage availability and view bookings from dashboard
 
 ### Business Flow
 1. Tap "I'm a Business" on home screen
 2. Enter business name + email to create account
-3. Browse local creators with their pricing
-4. Select creator → Choose content type (Story/Post/Reel)
-5. Pick the date you want the content posted
+3. Browse local creators
+4. Select creator → View their available slots
+5. Pick a slot to book (content type + date already set by creator)
 6. Checkout with Stripe
 7. Receive Local Post Helper tips for ABQ-specific optimization
 
@@ -94,14 +95,13 @@ src/
 │   ├── role-select.tsx        # Admin role selection
 │   ├── business/
 │   │   ├── index.tsx          # Business dashboard
-│   │   ├── creator/[id].tsx   # Creator profile with pricing options
-│   │   ├── booking/new.tsx    # New booking (select date & pay)
-│   │   ├── booking/[slotId].tsx # Legacy slot booking
+│   │   ├── creator/[id].tsx   # Creator profile with available slots
+│   │   ├── booking/[slotId].tsx # Book a specific slot & pay
 │   │   ├── confirmation.tsx   # Confirmation with Local Post Helper
 │   │   └── my-bookings.tsx    # Business's bookings
 │   ├── creator/
 │   │   ├── index.tsx          # Creator dashboard
-│   │   ├── slots.tsx          # Manage pricing (Story/Post/Reel)
+│   │   ├── slots.tsx          # Manage availability (add/remove slots)
 │   │   ├── bookings.tsx       # View bookings with tips
 │   │   └── upload-proof/[id].tsx # Upload proof of post
 │   └── admin/

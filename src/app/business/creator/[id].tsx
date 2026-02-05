@@ -1,22 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Image, Pressable, Modal } from "react-native";
+import { View, Text, ScrollView, Image, Pressable, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Instagram, Users, Clock, Image as ImageIcon, Film, X, CheckCircle } from "lucide-react-native";
+import { Instagram, Users, Clock, Image as LucideImage, Film, Calendar, Sparkles } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
-import { DateWheelPicker } from "@/components/DateWheelPicker";
-import { useCreator } from "@/lib/db-hooks";
+import { useCreator, useCreatorSlots } from "@/lib/db-hooks";
 import { cn } from "@/lib/cn";
 import * as Haptics from "expo-haptics";
-
-type SlotType = "story" | "post" | "reel";
-
-const slotTypes: { id: SlotType; label: string; icon: React.ReactNode; description: string }[] = [
-  { id: "story", label: "Story", icon: <Clock size={20} color="#000" />, description: "24hr visibility" },
-  { id: "reel", label: "Reel", icon: <Film size={20} color="#000" />, description: "Short video" },
-  { id: "post", label: "Post", icon: <ImageIcon size={20} color="#000" />, description: "Permanent feed" },
-];
 
 function formatFollowers(count: number): string {
   if (count >= 1000000) {
@@ -28,24 +19,48 @@ function formatFollowers(count: number): string {
   return count.toString();
 }
 
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function getSlotIcon(type: string, color: string = "#6b7280") {
+  switch (type) {
+    case "story": return <Clock size={20} color={color} />;
+    case "reel": return <Film size={20} color={color} />;
+    case "post": return <LucideImage size={20} color={color} />;
+    default: return <LucideImage size={20} color={color} />;
+  }
+}
+
 export default function CreatorProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { data: creator, isLoading } = useCreator(id);
+  const { data: creator, isLoading: creatorLoading } = useCreator(id);
+  const { data: slots = [], isLoading: slotsLoading } = useCreatorSlots(id);
 
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [selectedType, setSelectedType] = useState<SlotType>("story");
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow;
-  });
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  const isLoading = creatorLoading || slotsLoading;
+  const availableSlots = slots.filter((s) => s.available);
 
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">Loading...</Text>
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading...</Text>
       </SafeAreaView>
     );
   }
@@ -58,38 +73,18 @@ export default function CreatorProfileScreen() {
     );
   }
 
-  const getPrice = (type: SlotType): number => {
-    switch (type) {
-      case "story": return creator.story_price || 50;
-      case "post": return creator.post_price || 100;
-      case "reel": return creator.reel_price || 150;
-    }
-  };
-
-  const handleTypeSelect = (type: SlotType) => {
+  const handleSlotSelect = (slotId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedType(type);
+    setSelectedSlotId(slotId);
   };
 
-  const handleBookNow = () => {
+  const handleBookSlot = () => {
+    if (!selectedSlotId) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowBookingModal(true);
+    router.push(`/business/booking/${selectedSlotId}`);
   };
 
-  const handleConfirmBooking = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowBookingModal(false);
-    // Navigate to booking confirmation with the selected options
-    router.push({
-      pathname: "/business/booking/new",
-      params: {
-        creatorId: creator.id,
-        type: selectedType,
-        date: selectedDate.toISOString().split("T")[0],
-        price: getPrice(selectedType).toString(),
-      },
-    });
-  };
+  const selectedSlot = availableSlots.find((s) => s.id === selectedSlotId);
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
@@ -151,134 +146,94 @@ export default function CreatorProfileScreen() {
           <Text className="text-gray-600 text-sm leading-5">{creator.bio}</Text>
         </Animated.View>
 
-        {/* Pricing Options */}
+        {/* Available Slots */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
           className="px-5 mb-6"
         >
           <Text className="text-black font-semibold text-base mb-4">
-            Content Options
+            Available Slots
           </Text>
 
-          {slotTypes.map((type) => {
-            const price = getPrice(type.id);
-            const isSelected = selectedType === type.id;
+          {availableSlots.length === 0 ? (
+            <View className="py-12 items-center">
+              <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+                <Calendar size={32} color="#9ca3af" />
+              </View>
+              <Text className="text-gray-500 font-medium mb-1">No slots available</Text>
+              <Text className="text-gray-400 text-sm text-center px-8">
+                This creator hasn't added any available slots yet. Check back later!
+              </Text>
+            </View>
+          ) : (
+            availableSlots.map((slot) => {
+              const isSelected = selectedSlotId === slot.id;
 
-            return (
-              <Pressable
-                key={type.id}
-                onPress={() => handleTypeSelect(type.id)}
-                className="mb-3"
-              >
-                <View
-                  className={cn(
-                    "rounded-2xl p-4 flex-row items-center",
-                    isSelected ? "bg-black" : "bg-gray-50"
-                  )}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: isSelected ? "#000" : "rgba(0,0,0,0.05)",
-                  }}
+              return (
+                <Pressable
+                  key={slot.id}
+                  onPress={() => handleSlotSelect(slot.id)}
+                  className="mb-3"
                 >
                   <View
                     className={cn(
-                      "w-12 h-12 rounded-xl items-center justify-center mr-4",
-                      isSelected ? "bg-white" : "bg-white"
+                      "rounded-2xl p-4 flex-row items-center",
+                      isSelected ? "bg-black" : "bg-white"
                     )}
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: isSelected ? 4 : 1 },
+                      shadowOpacity: isSelected ? 0.2 : 0.08,
+                      shadowRadius: isSelected ? 12 : 4,
+                      elevation: isSelected ? 4 : 2,
+                      borderWidth: 1,
+                      borderColor: isSelected ? "#000" : "rgba(0,0,0,0.05)",
+                    }}
                   >
-                    {React.cloneElement(type.icon as React.ReactElement<{ color: string }>, {
-                      color: "#000",
-                    })}
-                  </View>
-                  <View className="flex-1">
-                    <Text className={cn("font-semibold text-base", isSelected ? "text-white" : "text-black")}>
-                      {type.label}
-                    </Text>
-                    <Text className={cn("text-sm", isSelected ? "text-gray-400" : "text-gray-500")}>
-                      {type.description}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className={cn("text-xl font-bold", isSelected ? "text-white" : "text-black")}>
-                      ${price}
-                    </Text>
-                    {isSelected && (
-                      <View className="w-5 h-5 bg-green-500 rounded-full items-center justify-center mt-1">
-                        <CheckCircle size={14} color="#fff" />
+                    <View
+                      className={cn(
+                        "w-12 h-12 rounded-xl items-center justify-center mr-4",
+                        isSelected ? "bg-white" : "bg-gray-50"
+                      )}
+                    >
+                      {getSlotIcon(slot.type, isSelected ? "#000" : "#6b7280")}
+                    </View>
+                    <View className="flex-1">
+                      <Text className={cn("font-semibold text-base capitalize", isSelected ? "text-white" : "text-black")}>
+                        {slot.type}
+                      </Text>
+                      <View className="flex-row items-center mt-1">
+                        <Calendar size={12} color={isSelected ? "#9ca3af" : "#6b7280"} />
+                        <Text className={cn("text-sm ml-1", isSelected ? "text-gray-400" : "text-gray-500")}>
+                          {formatDate(slot.date)}
+                        </Text>
                       </View>
-                    )}
+                    </View>
+                    <Text className={cn("text-xl font-bold", isSelected ? "text-white" : "text-black")}>
+                      ${slot.price}
+                    </Text>
                   </View>
-                </View>
-              </Pressable>
-            );
-          })}
+                </Pressable>
+              );
+            })
+          )}
         </Animated.View>
 
         <View className="h-24" />
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-4 bg-white border-t border-gray-100">
-        <PillButton
-          title={`Book ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} - $${getPrice(selectedType)}`}
-          onPress={handleBookNow}
-          variant="black"
-          size="lg"
-        />
-      </View>
-
-      {/* Booking Modal - Date Selection */}
-      <Modal
-        visible={showBookingModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowBookingModal(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl px-5 pb-8 pt-4">
-            <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-4" />
-
-            <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-black text-xl font-bold">Select Date</Text>
-              <Pressable
-                onPress={() => setShowBookingModal(false)}
-                className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-              >
-                <X size={18} color="#000" />
-              </Pressable>
-            </View>
-
-            {/* Summary */}
-            <View
-              className="bg-gray-50 rounded-2xl p-4 mb-6 flex-row items-center"
-              style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}
-            >
-              <Image
-                source={{ uri: creator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
-                className="w-12 h-12 rounded-full mr-3"
-                resizeMode="cover"
-              />
-              <View className="flex-1">
-                <Text className="text-black font-semibold">{creator.name}</Text>
-                <Text className="text-gray-500 text-sm capitalize">{selectedType} • ${getPrice(selectedType)}</Text>
-              </View>
-            </View>
-
-            {/* Date Picker */}
-            <Text className="text-black font-medium mb-3">When do you want the content posted?</Text>
-            <DateWheelPicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
-
-            <View className="mt-6">
-              <PillButton
-                title="Continue to Payment"
-                onPress={handleConfirmBooking}
-                variant="black"
-                size="lg"
-              />
-            </View>
-          </View>
+      {availableSlots.length > 0 && (
+        <View className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-4 bg-white border-t border-gray-100">
+          <PillButton
+            title={selectedSlot ? `Book ${selectedSlot.type} - $${selectedSlot.price}` : "Select a slot to book"}
+            onPress={handleBookSlot}
+            variant="black"
+            size="lg"
+            disabled={!selectedSlotId}
+          />
         </View>
-      </Modal>
+      )}
     </SafeAreaView>
   );
 }

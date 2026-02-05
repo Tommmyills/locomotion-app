@@ -245,7 +245,7 @@ export default function CreatorDashboardScreen() {
           </Text>
 
           <PillButton
-            title="Manage Pricing"
+            title="Manage Availability"
             onPress={handleManageSlots}
             variant="black"
             size="lg"

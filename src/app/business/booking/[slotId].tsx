@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Image, Alert } from "react-native";
+import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Calendar, CreditCard, CheckCircle } from "lucide-react-native";
-import { SlotTypeBadge } from "@/components/SlotCard";
+import { Calendar, CreditCard, CheckCircle, Clock, Image as LucideImage, Film } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
-import useAppStore from "@/lib/state/app-store";
+import { useCreator, useCreateBooking } from "@/lib/db-hooks";
+import { useAuthStore } from "@/lib/auth-store";
+import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -18,19 +21,53 @@ function formatDate(dateString: string): string {
   });
 }
 
+function getSlotIcon(type: string) {
+  switch (type) {
+    case "story": return <Clock size={20} color="#000" />;
+    case "reel": return <Film size={20} color="#000" />;
+    case "post": return <LucideImage size={20} color="#000" />;
+    default: return <LucideImage size={20} color="#000" />;
+  }
+}
+
 export default function BookingScreen() {
   const router = useRouter();
   const { slotId } = useLocalSearchParams<{ slotId: string }>();
 
-  const adSlots = useAppStore((s) => s.adSlots);
-  const creators = useAppStore((s) => s.creators);
-  const currentUser = useAppStore((s) => s.currentUser);
-  const createBooking = useAppStore((s) => s.createBooking);
+  const businessEmail = useAuthStore((s) => s.businessEmail);
+  const businessName = useAuthStore((s) => s.businessName);
+
+  // Fetch slot from database
+  const { data: slot, isLoading: slotLoading } = useQuery({
+    queryKey: ["slot", slotId],
+    queryFn: async () => {
+      if (!slotId) return null;
+      const { data, error } = await supabase
+        .from("ad_slots")
+        .select("*")
+        .eq("id", slotId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slotId,
+  });
+
+  const { data: creator, isLoading: creatorLoading } = useCreator(slot?.creator_id);
+  const createBooking = useCreateBooking();
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const slot = adSlots.find((s) => s.id === slotId);
-  const creator = slot ? creators.find((c) => c.id === slot.creatorId) : null;
+  const isLoading = slotLoading || creatorLoading;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!slot || !creator) {
     return (
@@ -59,28 +96,30 @@ export default function BookingScreen() {
   }
 
   const handlePayment = async () => {
-    if (!currentUser) return;
+    if (!businessEmail || !businessName) return;
 
     setIsProcessing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Simulate Stripe checkout delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Create the booking
+      await createBooking.mutateAsync({
+        business_name: businessName,
+        business_email: businessEmail,
+        creator_id: creator.id,
+        slot_id: slot.id,
+        slot_type: slot.type,
+        date: slot.date,
+        price: slot.price,
+      });
 
-    // Create the booking
-    createBooking({
-      businessId: currentUser.id,
-      businessName: currentUser.name,
-      creatorId: creator.id,
-      creatorName: creator.name,
-      slotId: slot.id,
-      slotType: slot.type,
-      date: slot.date,
-      price: slot.price,
-      status: "pending",
-    });
-
-    setIsProcessing(false);
-    router.replace("/business/confirmation");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace("/business/confirmation");
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setIsProcessing(false);
+    }
   };
 
   const platformFee = Math.round(slot.price * 0.1);
@@ -108,7 +147,7 @@ export default function BookingScreen() {
           >
             <View className="flex-row p-4">
               <Image
-                source={{ uri: creator.photo }}
+                source={{ uri: creator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
                 className="w-16 h-16 rounded-full"
                 resizeMode="cover"
               />
@@ -116,8 +155,8 @@ export default function BookingScreen() {
                 <Text className="text-black font-semibold text-lg">
                   {creator.name}
                 </Text>
-                <Text className="text-gray-500 text-sm capitalize">
-                  {creator.platform}
+                <Text className="text-gray-500 text-sm">
+                  {creator.instagram_handle}
                 </Text>
               </View>
             </View>
@@ -141,8 +180,11 @@ export default function BookingScreen() {
             }}
           >
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-gray-600">Ad Type</Text>
-              <SlotTypeBadge type={slot.type} />
+              <Text className="text-gray-600">Content Type</Text>
+              <View className="flex-row items-center bg-black rounded-full px-3 py-1.5">
+                {getSlotIcon(slot.type)}
+                <Text className="text-white font-medium ml-2 capitalize">{slot.type}</Text>
+              </View>
             </View>
 
             <View className="flex-row items-center justify-between mb-4">
@@ -158,7 +200,7 @@ export default function BookingScreen() {
             <View className="h-px bg-gray-200 my-2" />
 
             <View className="flex-row items-center justify-between mt-2">
-              <Text className="text-gray-600">Slot Price</Text>
+              <Text className="text-gray-600">Creator Fee</Text>
               <Text className="text-black font-medium">${slot.price}</Text>
             </View>
 
