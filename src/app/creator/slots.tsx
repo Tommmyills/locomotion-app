@@ -38,6 +38,7 @@ export default function ManageSlotsScreen() {
   const [showModal, setShowModal] = useState(false);
   const [selectedType, setSelectedType] = useState<SlotType>("story");
   const [price, setPrice] = useState(50);
+  const [deletingSlotId, setDeletingSlotId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -104,12 +105,18 @@ export default function ManageSlotsScreen() {
   };
 
   const handleDeleteSlot = async (slotId: string) => {
+    console.log("Delete button pressed for slot:", slotId);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setDeletingSlotId(slotId);
     try {
       await deleteSlot.mutateAsync(slotId);
+      console.log("Slot deleted successfully");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error("Error deleting slot:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setDeletingSlotId(null);
     }
   };
 
@@ -241,14 +248,20 @@ export default function ManageSlotsScreen() {
                     </Text>
                   </View>
                 </View>
-                <Text className="text-black font-bold text-lg mr-3">
+                <Text className="text-black font-bold text-lg mr-2">
                   ${slot.price}
                 </Text>
                 <Pressable
                   onPress={() => handleDeleteSlot(slot.id)}
-                  className="w-8 h-8 bg-red-50 rounded-full items-center justify-center"
+                  disabled={deletingSlotId === slot.id}
+                  className="w-10 h-10 bg-red-50 rounded-full items-center justify-center active:bg-red-100"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Trash2 size={16} color="#ef4444" />
+                  {deletingSlotId === slot.id ? (
+                    <ActivityIndicator size="small" color="#ef4444" />
+                  ) : (
+                    <Trash2 size={18} color="#ef4444" />
+                  )}
                 </Pressable>
               </View>
             ))}
