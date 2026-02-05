@@ -20,7 +20,6 @@ export default function SplashScreenPage() {
   const creatorId = useAuthStore((s) => s.creatorId);
 
   const handleImageLoad = () => {
-    console.log("Splash image loaded!");
     setIsReady(true);
     SplashScreen.hideAsync();
   };
@@ -28,34 +27,51 @@ export default function SplashScreenPage() {
   useEffect(() => {
     if (!isReady) return;
 
-    // Navigate after 2 seconds once image is loaded
+    // Navigate after a short delay
     const timer = setTimeout(() => {
-      // Check if creator is logged in via authStore (Supabase-backed)
-      if (creatorId) {
-        router.replace("/creator");
-        return;
-      }
-
-      // Check if user is logged in via appStore
-      if (isAppAuthenticated && currentUser) {
-        if (currentUser.role === "business") {
-          router.replace("/business");
-        } else if (currentUser.role === "creator") {
+      try {
+        // Check if creator is logged in via authStore (Supabase-backed)
+        if (creatorId) {
           router.replace("/creator");
-        } else if (currentUser.role === "admin") {
-          router.replace("/admin");
-        } else {
-          router.replace("/home");
+          return;
         }
-        return;
-      }
 
-      // Not logged in, go to home
-      router.replace("/home");
-    }, 2000);
+        // Check if user is logged in via appStore
+        if (isAppAuthenticated && currentUser) {
+          if (currentUser.role === "business") {
+            router.replace("/business");
+          } else if (currentUser.role === "creator") {
+            router.replace("/creator");
+          } else if (currentUser.role === "admin") {
+            router.replace("/admin");
+          } else {
+            router.replace("/home");
+          }
+          return;
+        }
+
+        // Not logged in, go to home
+        router.replace("/home");
+      } catch (error) {
+        console.error("Navigation error:", error);
+        router.replace("/home");
+      }
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [isReady, router, creatorId, isAppAuthenticated, currentUser]);
+
+  // Fallback: if image doesn't load in 3 seconds, proceed anyway
+  useEffect(() => {
+    const fallbackTimer = setTimeout(() => {
+      if (!isReady) {
+        setIsReady(true);
+        SplashScreen.hideAsync();
+      }
+    }, 3000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [isReady]);
 
   return (
     <View style={styles.container}>
@@ -64,7 +80,11 @@ export default function SplashScreenPage() {
         style={styles.logo}
         resizeMode="contain"
         onLoad={handleImageLoad}
-        onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+        onError={() => {
+          // If image fails, proceed anyway
+          setIsReady(true);
+          SplashScreen.hideAsync();
+        }}
       />
       {!isReady && (
         <ActivityIndicator size="large" color="#E85D04" style={styles.loader} />
