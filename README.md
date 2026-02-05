@@ -20,6 +20,8 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 5. Go live immediately - available by default!
 6. Block dates on calendar when unavailable (tap to block/unblock)
 7. View bookings and manage availability from dashboard
+8. When booked: Tap pending booking → Upload Instagram post link → Submit proof
+9. Proof is verified and booking marked complete
 
 ### Business Flow
 1. Tap "I'm a Business" on home screen
@@ -103,8 +105,9 @@ src/
 │   ├── creator/
 │   │   ├── index.tsx          # Creator dashboard
 │   │   ├── slots.tsx          # Calendar-based availability management
-│   │   ├── bookings.tsx       # View bookings with tips
-│   │   └── upload-proof/[id].tsx # Upload proof of post
+│   │   ├── bookings.tsx       # View bookings (Supabase)
+│   │   ├── pending-bookings.tsx # Filtered pending bookings list
+│   │   └── upload-proof/[id].tsx # Upload proof of post (Supabase)
 │   └── admin/
 │       ├── index.tsx          # Admin dashboard
 │       ├── creators.tsx       # Approve creators

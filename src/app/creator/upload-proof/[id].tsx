@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, ScrollView } from "react-native";
+import { View, Text, TextInput, ScrollView, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Link, Image, CheckCircle } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { SlotTypeBadge } from "@/components/SlotCard";
-import useAppStore from "@/lib/state/app-store";
+import type { SlotType } from "@/lib/state/app-store";
+import { useCreatorBookings, useUploadProof } from "@/lib/db-hooks";
+import { useAuthStore } from "@/lib/auth-store";
+import * as Haptics from "expo-haptics";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -21,19 +24,36 @@ export default function UploadProofScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const bookings = useAppStore((s) => s.bookings);
-  const uploadProof = useAppStore((s) => s.uploadProof);
+  const creatorId = useAuthStore((s) => s.creatorId);
+  const { data: bookings = [], isLoading } = useCreatorBookings(creatorId ?? undefined);
+  const uploadProofMutation = useUploadProof();
 
   const booking = bookings.find((b) => b.id === id);
 
   const [proofUrl, setProofUrl] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading booking...</Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!booking) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text className="text-gray-500">Booking not found</Text>
+      <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
+        <Text className="text-black text-lg font-semibold mb-2">Booking not found</Text>
+        <Text className="text-gray-500 text-center mb-6">
+          This booking may have been completed or removed.
+        </Text>
+        <PillButton
+          title="Back to Dashboard"
+          onPress={() => router.replace("/creator")}
+          variant="black"
+        />
       </SafeAreaView>
     );
   }
@@ -41,15 +61,20 @@ export default function UploadProofScreen() {
   const handleUpload = async () => {
     if (!proofUrl.trim()) return;
 
-    setIsUploading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Simulate upload delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await uploadProofMutation.mutateAsync({
+        bookingId: booking.id,
+        proofUrl: proofUrl.trim(),
+      });
 
-    uploadProof(booking.id, proofUrl.trim());
-
-    setIsUploading(false);
-    setUploaded(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setUploaded(true);
+    } catch (error) {
+      console.error("Error uploading proof:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
   };
 
   if (uploaded) {
@@ -64,14 +89,14 @@ export default function UploadProofScreen() {
               <CheckCircle size={40} color="#16a34a" />
             </View>
             <Text className="text-black text-xl font-bold mb-2 text-center">
-              Proof Uploaded!
+              Proof Submitted!
             </Text>
             <Text className="text-gray-500 text-base text-center mb-8">
-              The admin will review and mark this booking as complete.
+              We'll verify your post and update your booking status.
             </Text>
             <PillButton
-              title="Back to Bookings"
-              onPress={() => router.replace("/creator/bookings")}
+              title="Back to Dashboard"
+              onPress={() => router.replace("/creator")}
               variant="black"
             />
           </Animated.View>
@@ -96,13 +121,16 @@ export default function UploadProofScreen() {
             }}
           >
             <Text className="text-black font-semibold text-lg mb-2">
-              {booking.businessName}
+              {booking.business_name}
             </Text>
             <View className="flex-row items-center">
-              <SlotTypeBadge type={booking.slotType} />
+              <SlotTypeBadge type={booking.slot_type as SlotType} />
               <Text className="text-gray-500 text-sm ml-3">
                 {formatDate(booking.date)}
               </Text>
+            </View>
+            <View className="mt-3 pt-3 border-t border-gray-200">
+              <Text className="text-black font-bold text-lg">${booking.price}</Text>
             </View>
           </View>
         </Animated.View>
@@ -116,7 +144,7 @@ export default function UploadProofScreen() {
             Proof of Post
           </Text>
           <Text className="text-gray-500 text-sm mb-4">
-            Enter a link to your post (Instagram URL, screenshot link, etc.)
+            Paste the link to your Instagram post
           </Text>
 
           <View
@@ -133,7 +161,7 @@ export default function UploadProofScreen() {
           >
             <View className="flex-row items-center mb-3">
               <Link size={20} color="#6b7280" />
-              <Text className="text-gray-500 text-sm ml-2">Post URL</Text>
+              <Text className="text-gray-500 text-sm ml-2">Instagram URL</Text>
             </View>
             <TextInput
               value={proofUrl}
@@ -151,17 +179,19 @@ export default function UploadProofScreen() {
           </View>
 
           <View
-            className="rounded-2xl bg-gray-50 p-4 flex-row items-start"
+            className="rounded-2xl bg-blue-50 p-4 flex-row items-start"
             style={{
               borderWidth: 1,
-              borderColor: "rgba(0,0,0,0.05)",
+              borderColor: "rgba(59, 130, 246, 0.15)",
             }}
           >
-            <Image size={20} color="#6b7280" />
+            <Image size={20} color="#3b82f6" />
             <View className="flex-1 ml-3">
-              <Text className="text-gray-600 text-sm">
-                You can also upload a screenshot to any image hosting service
-                and paste the link here.
+              <Text className="text-blue-800 font-medium text-sm mb-1">
+                How to get your post link
+              </Text>
+              <Text className="text-blue-600 text-sm">
+                Open your post on Instagram → Tap the three dots → Copy Link
               </Text>
             </View>
           </View>
@@ -171,11 +201,11 @@ export default function UploadProofScreen() {
       {/* Bottom CTA */}
       <View className="px-5 pb-6 pt-4 border-t border-gray-100">
         <PillButton
-          title={isUploading ? "Uploading..." : "Submit Proof"}
+          title={uploadProofMutation.isPending ? "Submitting..." : "Submit Proof"}
           onPress={handleUpload}
           variant="black"
           size="lg"
-          disabled={!proofUrl.trim() || isUploading}
+          disabled={!proofUrl.trim() || uploadProofMutation.isPending}
         />
       </View>
     </SafeAreaView>
