@@ -17,16 +17,16 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 2. Enter email + Instagram handle
 3. Confirm auto-generated profile (photo, handle, followers, engagement)
 4. Set default prices for Stories, Posts, and Reels
-5. Go live immediately
-6. Add available slots when ready to create content (pick type + date with wheel picker)
-7. Manage availability and view bookings from dashboard
+5. Go live immediately - available by default!
+6. Block dates on calendar when unavailable (tap to block/unblock)
+7. View bookings and manage availability from dashboard
 
 ### Business Flow
 1. Tap "I'm a Business" on home screen
 2. Enter business name + email to create account
 3. Browse local creators
-4. Select creator → View their available slots
-5. Pick a slot to book (content type + date already set by creator)
+4. Select creator → Choose content type (Story/Post/Reel)
+5. Pick any available date from calendar (blocked/booked dates shown)
 6. Checkout with Stripe
 7. Receive Local Post Helper tips for ABQ-specific optimization
 
@@ -95,13 +95,14 @@ src/
 │   ├── role-select.tsx        # Admin role selection
 │   ├── business/
 │   │   ├── index.tsx          # Business dashboard
-│   │   ├── creator/[id].tsx   # Creator profile with available slots
-│   │   ├── booking/[slotId].tsx # Book a specific slot & pay
+│   │   ├── creator/[id].tsx   # Creator profile with calendar booking
+│   │   ├── booking/confirm.tsx # Booking confirmation & payment
+│   │   ├── booking/[slotId].tsx # Legacy slot booking
 │   │   ├── confirmation.tsx   # Confirmation with Local Post Helper
 │   │   └── my-bookings.tsx    # Business's bookings
 │   ├── creator/
 │   │   ├── index.tsx          # Creator dashboard
-│   │   ├── slots.tsx          # Manage availability (add/remove slots)
+│   │   ├── slots.tsx          # Calendar-based availability management
 │   │   ├── bookings.tsx       # View bookings with tips
 │   │   └── upload-proof/[id].tsx # Upload proof of post
 │   └── admin/
@@ -112,7 +113,8 @@ src/
 │   ├── PillButton.tsx         # Animated button with haptics
 │   ├── LaserButton.tsx        # Button with laser effect
 │   ├── CreatorCard.tsx        # Creator display cards
-│   └── SlotCard.tsx           # Ad slot display cards
+│   ├── SlotCard.tsx           # Ad slot display cards
+│   └── AvailabilityCalendar.tsx # Calendar for blocking/booking dates
 └── lib/
     ├── auth-store.ts          # Auth persistence (Zustand + AsyncStorage)
     ├── db-hooks.ts            # React Query hooks for Supabase

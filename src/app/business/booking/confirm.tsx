@@ -1,0 +1,267 @@
+import React, { useState } from "react";
+import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { Calendar, CreditCard, CheckCircle, Clock, Image as LucideImage, Film } from "lucide-react-native";
+import { PillButton } from "@/components/PillButton";
+import { useCreator, useCreateSlot, useCreateBooking } from "@/lib/db-hooks";
+import { useAuthStore } from "@/lib/auth-store";
+import * as Haptics from "expo-haptics";
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getSlotIcon(type: string) {
+  switch (type) {
+    case "story": return <Clock size={20} color="#fff" />;
+    case "reel": return <Film size={20} color="#fff" />;
+    case "post": return <LucideImage size={20} color="#fff" />;
+    default: return <LucideImage size={20} color="#fff" />;
+  }
+}
+
+export default function BookingConfirmScreen() {
+  const router = useRouter();
+  const { creatorId, type, date, price } = useLocalSearchParams<{
+    creatorId: string;
+    type: string;
+    date: string;
+    price: string;
+  }>();
+
+  const businessEmail = useAuthStore((s) => s.businessEmail);
+  const businessName = useAuthStore((s) => s.businessName);
+
+  const { data: creator, isLoading } = useCreator(creatorId);
+  const createSlot = useCreateSlot();
+  const createBooking = useCreateBooking();
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#000" />
+        <Text className="text-gray-500 mt-4">Loading...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!creator || !type || !date || !price) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
+        <Text className="text-black text-xl font-bold mb-2">
+          Missing Information
+        </Text>
+        <Text className="text-gray-500 text-center mb-6">
+          Something went wrong. Please try again.
+        </Text>
+        <PillButton
+          title="Go Back"
+          onPress={() => router.back()}
+          variant="black"
+        />
+      </SafeAreaView>
+    );
+  }
+
+  const slotPrice = parseInt(price, 10);
+  const platformFee = Math.round(slotPrice * 0.1);
+  const total = slotPrice + platformFee;
+
+  const handlePayment = async () => {
+    if (!businessEmail || !businessName) return;
+
+    setIsProcessing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      // 1. Create the ad slot on-demand
+      const newSlot = await createSlot.mutateAsync({
+        creator_id: creatorId,
+        type: type as "story" | "post" | "reel",
+        price: slotPrice,
+        date: date,
+      });
+
+      // 2. Create the booking for this slot
+      await createBooking.mutateAsync({
+        business_name: businessName,
+        business_email: businessEmail,
+        creator_id: creatorId,
+        slot_id: newSlot.id,
+        slot_type: type,
+        date: date,
+        price: slotPrice,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace("/business/confirmation");
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Creator Info */}
+        <Animated.View
+          entering={FadeInDown.duration(400)}
+          className="px-5 pt-4 pb-6"
+        >
+          <View
+            className="rounded-2xl overflow-hidden bg-white"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              elevation: 3,
+              borderWidth: 1,
+              borderColor: "rgba(0,0,0,0.05)",
+            }}
+          >
+            <View className="flex-row p-4">
+              <Image
+                source={{ uri: creator.photo || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400" }}
+                className="w-16 h-16 rounded-full"
+                resizeMode="cover"
+              />
+              <View className="flex-1 ml-4 justify-center">
+                <Text className="text-black font-semibold text-lg">
+                  {creator.name}
+                </Text>
+                <Text className="text-gray-500 text-sm">
+                  {creator.instagram_handle}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Booking Details */}
+        <Animated.View
+          entering={FadeInDown.delay(100).duration(400)}
+          className="px-5 mb-6"
+        >
+          <Text className="text-black font-semibold text-base mb-3">
+            Booking Details
+          </Text>
+
+          <View
+            className="rounded-2xl bg-gray-50 p-4"
+            style={{
+              borderWidth: 1,
+              borderColor: "rgba(0,0,0,0.05)",
+            }}
+          >
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-gray-600">Content Type</Text>
+              <View className="flex-row items-center bg-black rounded-full px-3 py-1.5">
+                {getSlotIcon(type)}
+                <Text className="text-white font-medium ml-2 capitalize">{type}</Text>
+              </View>
+            </View>
+
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-gray-600">Post Date</Text>
+              <View className="flex-row items-center">
+                <Calendar size={16} color="#000" />
+                <Text className="text-black font-medium ml-2">
+                  {formatDate(date)}
+                </Text>
+              </View>
+            </View>
+
+            <View className="h-px bg-gray-200 my-2" />
+
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-gray-600">Creator Fee</Text>
+              <Text className="text-black font-medium">${slotPrice}</Text>
+            </View>
+
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-gray-600">Platform Fee (10%)</Text>
+              <Text className="text-black font-medium">${platformFee}</Text>
+            </View>
+
+            <View className="h-px bg-gray-200 my-3" />
+
+            <View className="flex-row items-center justify-between">
+              <Text className="text-black font-bold text-lg">Total</Text>
+              <Text className="text-black font-bold text-xl">${total}</Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Payment Method */}
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(400)}
+          className="px-5 mb-6"
+        >
+          <Text className="text-black font-semibold text-base mb-3">
+            Payment Method
+          </Text>
+
+          <View
+            className="rounded-2xl bg-black p-4 flex-row items-center"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+          >
+            <View className="w-12 h-12 bg-white rounded-xl items-center justify-center mr-4">
+              <CreditCard size={24} color="#000" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-white font-semibold">
+                Pay with Stripe
+              </Text>
+              <Text className="text-gray-400 text-sm">
+                Secure checkout
+              </Text>
+            </View>
+            <CheckCircle size={24} color="#22c55e" />
+          </View>
+        </Animated.View>
+
+        {/* Terms */}
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(400)}
+          className="px-5 mb-6"
+        >
+          <Text className="text-gray-400 text-xs text-center leading-4">
+            By completing this purchase, you agree to our terms of service.
+            The creator will post your ad on the scheduled date. Proof of
+            posting will be provided within 24 hours.
+          </Text>
+        </Animated.View>
+      </ScrollView>
+
+      {/* Bottom CTA */}
+      <View className="px-5 pb-6 pt-4 border-t border-gray-100">
+        <PillButton
+          title={isProcessing ? "Processing..." : `Pay $${total}`}
+          onPress={handlePayment}
+          variant="black"
+          size="lg"
+          disabled={isProcessing}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}

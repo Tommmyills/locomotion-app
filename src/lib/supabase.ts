@@ -29,6 +29,7 @@ export interface DbCreator {
   story_price: number | null;
   post_price: number | null;
   reel_price: number | null;
+  blocked_dates: string[] | null;
   created_at: string;
 }
 

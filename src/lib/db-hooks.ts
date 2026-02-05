@@ -81,6 +81,7 @@ export function useCreateCreator() {
           ...creator,
           city: "Albuquerque",
           approved: true,
+          blocked_dates: [],
         })
         .select()
         .single();
@@ -90,6 +91,29 @@ export function useCreateCreator() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["creators"] });
+    },
+  });
+}
+
+export function useUpdateBlockedDates() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ creatorId, blockedDates }: { creatorId: string; blockedDates: string[] }) => {
+      const { data, error } = await supabase
+        .from("creators")
+        .update({ blocked_dates: blockedDates })
+        .eq("id", creatorId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as DbCreator;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["creators"] });
+      queryClient.invalidateQueries({ queryKey: ["creator", variables.creatorId] });
+      queryClient.invalidateQueries({ queryKey: ["creator-by-email"] });
     },
   });
 }
