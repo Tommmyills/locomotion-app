@@ -14,12 +14,12 @@ LOCO•MOTION is a local-only influencer marketplace that removes friction from 
 
 ### Creator Flow
 1. Tap "I'm a Creator" on home screen
-2. Enter email + Instagram handle
-3. Confirm auto-generated profile (photo, handle, followers, engagement)
-4. Set default prices for Stories, Posts, and Reels
-5. Go live immediately - available by default!
-6. Block dates on calendar when unavailable (tap to block/unblock)
-7. View bookings and manage availability from dashboard
+2. Enter your name, email, Instagram handle, follower count
+3. Optionally add profile photo URL
+4. Confirm your profile
+5. Set your prices for Stories, Posts, and Reels
+6. Go live and start earning!
+7. Block dates on calendar when unavailable (tap to block/unblock)
 8. When booked: Tap pending booking → Upload Instagram post link → Submit proof
 9. Proof is verified and booking marked complete
 
@@ -144,12 +144,11 @@ src/
 ### Booking
 - businessId, creatorId, slotId, slotType, date, price, status, proofUrl
 
-## Mock Data
+## Data
 
-Pre-populated with Albuquerque creators:
-- Sofia Martinez (38K followers) - Lifestyle & food
-- Diego Romero (52K followers) - Outdoor adventure
-- Mia Chavez (28K followers) - Fashion & beauty
-- Carlos Sanchez (21K followers) - Food critic
-- 1 pending creator for admin testing
-- 10 available ad slots
+All creator data comes from Supabase. No mock data - real creators enter their own info:
+- Name
+- Email
+- Instagram handle
+- Follower count
+- Profile photo URL (optional)

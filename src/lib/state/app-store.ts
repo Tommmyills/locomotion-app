@@ -87,77 +87,9 @@ interface AppStore {
 // Generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-// Mock data for MVP - Albuquerque creators
-const mockCreators: Creator[] = [
-  {
-    id: "c1",
-    userId: "u1",
-    name: "@albuquerquegeorge",
-    photo: "https://images.composerapi.com/019beec7-0626-7599-b51a-5782d05789c9/assets/images/image_1769257455_1769257455307_019beff6-4ecb-732f-a420-20bee18f643c.jpg",
-    platform: "instagram",
-    followerCount: 7797,
-    bio: "Albuquerque local content creator. Showcasing the best of the Duke City!",
-    city: "Albuquerque",
-    approved: true,
-  },
-  {
-    id: "c2",
-    userId: "u2",
-    name: "Diego Romero",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
-    platform: "instagram",
-    followerCount: 52000,
-    bio: "Outdoor adventure & hiking in NM. From the Sandias to the Rio Grande.",
-    city: "Albuquerque",
-    approved: true,
-  },
-  {
-    id: "c3",
-    userId: "u3",
-    name: "Mia Chavez",
-    photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
-    platform: "instagram",
-    followerCount: 28000,
-    bio: "Fashion & beauty in the 505. Supporting local Burque businesses.",
-    city: "Albuquerque",
-    approved: true,
-  },
-  {
-    id: "c4",
-    userId: "u4",
-    name: "Carlos Sanchez",
-    photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
-    platform: "instagram",
-    followerCount: 21000,
-    bio: "ABQ food & chile enthusiast. Red or green? Always Christmas!",
-    city: "Albuquerque",
-    approved: true,
-  },
-  {
-    id: "c5",
-    userId: "u5",
-    name: "Pending Creator",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
-    platform: "instagram",
-    followerCount: 8000,
-    bio: "New creator waiting for approval",
-    city: "Albuquerque",
-    approved: false,
-  },
-];
-
-const mockSlots: AdSlot[] = [
-  { id: "s1", creatorId: "c1", type: "story", price: 50, date: "2026-01-25", available: true },
-  { id: "s2", creatorId: "c1", type: "reel", price: 150, date: "2026-01-26", available: true },
-  { id: "s3", creatorId: "c1", type: "post", price: 100, date: "2026-01-27", available: true },
-  { id: "s4", creatorId: "c2", type: "story", price: 75, date: "2026-01-25", available: true },
-  { id: "s5", creatorId: "c2", type: "reel", price: 250, date: "2026-01-26", available: true },
-  { id: "s6", creatorId: "c2", type: "post", price: 175, date: "2026-01-28", available: true },
-  { id: "s7", creatorId: "c3", type: "story", price: 40, date: "2026-01-25", available: true },
-  { id: "s8", creatorId: "c3", type: "reel", price: 120, date: "2026-01-27", available: true },
-  { id: "s9", creatorId: "c4", type: "post", price: 80, date: "2026-01-26", available: true },
-  { id: "s10", creatorId: "c4", type: "story", price: 35, date: "2026-01-29", available: true },
-];
+// Empty arrays - no mock data, real creators come from Supabase
+const emptyCreators: Creator[] = [];
+const emptySlots: AdSlot[] = [];
 
 const useAppStore = create<AppStore>()(
   persist(
@@ -165,8 +97,8 @@ const useAppStore = create<AppStore>()(
       // Initial state
       currentUser: null,
       isAuthenticated: false,
-      creators: mockCreators,
-      adSlots: mockSlots,
+      creators: emptyCreators,
+      adSlots: emptySlots,
       bookings: [],
       cities: ["Albuquerque"],
       selectedCity: "Albuquerque",

@@ -3,7 +3,7 @@ import { View, Text, Pressable, Image, TextInput, KeyboardAvoidingView, Platform
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { Instagram, ArrowLeft, CheckCircle, Users, BarChart3, Sparkles, Clock, Image as ImageIcon, Film } from "lucide-react-native";
+import { Instagram, ArrowLeft, CheckCircle, Users, DollarSign, Sparkles, Clock, Image as ImageIcon, Film, Camera } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { LaserButton } from "@/components/LaserButton";
 import { useCreateCreator, useCreateSlots, useCreatorByEmail } from "@/lib/db-hooks";
@@ -12,16 +12,10 @@ import { useAuthStore } from "@/lib/auth-store";
 import useAppStore from "@/lib/state/app-store";
 import * as Haptics from "expo-haptics";
 
-type OnboardStep = "connect" | "confirm" | "pricing";
+type OnboardStep = "info" | "confirm" | "pricing";
 
-// Placeholder photos for demo
-const placeholderPhotos = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400",
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
-];
+// Default placeholder for creators who don't add a photo yet
+const DEFAULT_PHOTO = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400";
 
 export default function CreatorOnboardScreen() {
   const router = useRouter();
@@ -32,33 +26,19 @@ export default function CreatorOnboardScreen() {
   const existingCreatorEmail = useAuthStore((s) => s.creatorEmail);
   const existingBusinessEmail = useAuthStore((s) => s.businessEmail);
 
-  const [step, setStep] = useState<OnboardStep>("connect");
-  const [instagramHandle, setInstagramHandle] = useState("");
-  // Pre-fill email if they're already signed up as a business
-  const [email, setEmail] = useState(existingCreatorEmail || existingBusinessEmail || "");
-  const [igData, setIgData] = useState<{
-    handle: string;
-    name: string;
-    photo: string;
-    followers: number;
-    engagement: string;
-    posts: number;
-  } | null>(null);
+  const [step, setStep] = useState<OnboardStep>("info");
 
-  const handleConnectInstagram = () => {
-    if (!instagramHandle.trim() || !email.trim()) return;
+  // Step 1: Creator enters their real info
+  const [email, setEmail] = useState(existingCreatorEmail || existingBusinessEmail || "");
+  const [name, setName] = useState("");
+  const [instagramHandle, setInstagramHandle] = useState("");
+  const [followerCount, setFollowerCount] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+
+  const handleContinueToConfirm = () => {
+    if (!email.trim() || !name.trim() || !instagramHandle.trim() || !followerCount.trim()) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // Generate profile from handle
-    const handle = instagramHandle.startsWith("@") ? instagramHandle : `@${instagramHandle}`;
-    const name = instagramHandle.replace("@", "").split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-    const followers = Math.floor(Math.random() * 50000) + 5000;
-    const engagement = (Math.random() * 3 + 2).toFixed(1);
-    const posts = Math.floor(Math.random() * 200) + 50;
-    const photo = placeholderPhotos[Math.floor(Math.random() * placeholderPhotos.length)];
-
-    setIgData({ handle, name, photo, followers, engagement, posts });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setStep("confirm");
   };
@@ -70,7 +50,7 @@ export default function CreatorOnboardScreen() {
 
   const handleBack = () => {
     if (step === "confirm") {
-      setStep("connect");
+      setStep("info");
     } else if (step === "pricing") {
       setStep("confirm");
     } else {
@@ -83,6 +63,22 @@ export default function CreatorOnboardScreen() {
     if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
     return count.toString();
   };
+
+  // Parse follower count from user input
+  const parseFollowerCount = (input: string): number => {
+    const cleaned = input.replace(/[^0-9]/g, "");
+    return parseInt(cleaned, 10) || 0;
+  };
+
+  // Format the Instagram handle
+  const formatHandle = (handle: string): string => {
+    const cleaned = handle.replace("@", "").trim();
+    return cleaned ? `@${cleaned}` : "";
+  };
+
+  const parsedFollowers = parseFollowerCount(followerCount);
+  const formattedHandle = formatHandle(instagramHandle);
+  const displayPhoto = photoUrl.trim() || DEFAULT_PHOTO;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -97,28 +93,44 @@ export default function CreatorOnboardScreen() {
           </Pressable>
           <View className="flex-1 items-center pr-6">
             <Text className="text-gray-400 text-xs uppercase tracking-wider">
-              {step === "connect" && "Step 1 of 2"}
-              {step === "confirm" && "Step 1 of 2"}
-              {step === "pricing" && "Step 2 of 2"}
+              {step === "info" && "Step 1 of 3"}
+              {step === "confirm" && "Step 2 of 3"}
+              {step === "pricing" && "Step 3 of 3"}
             </Text>
           </View>
         </View>
 
-        {/* Connect Instagram Step */}
-        {step === "connect" && (
-          <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+        {/* Step 1: Enter Info */}
+        {step === "info" && (
+          <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Animated.View entering={FadeInDown.duration(400)} className="mt-4">
-              <View className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl items-center justify-center mb-4" style={{ backgroundColor: "#E1306C" }}>
+              <View className="w-16 h-16 bg-black rounded-2xl items-center justify-center mb-4">
                 <Instagram size={32} color="#fff" />
               </View>
 
               <Text className="text-black text-2xl font-bold mb-2">
                 Join as a Creator
               </Text>
-              <Text className="text-gray-500 text-base mb-8">
-                Enter your details to start earning from local businesses.
+              <Text className="text-gray-500 text-base mb-6">
+                Enter your info to start earning from local businesses.
               </Text>
 
+              {/* Name */}
+              <Text className="text-black font-medium mb-2">Your Name</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Sofia Martinez"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
+                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-4"
+                style={{
+                  borderWidth: 1,
+                  borderColor: "rgba(0,0,0,0.05)",
+                }}
+              />
+
+              {/* Email */}
               <Text className="text-black font-medium mb-2">Email</Text>
               <TextInput
                 value={email}
@@ -135,6 +147,7 @@ export default function CreatorOnboardScreen() {
                 }}
               />
 
+              {/* Instagram Handle */}
               <Text className="text-black font-medium mb-2">Instagram Handle</Text>
               <TextInput
                 value={instagramHandle}
@@ -143,54 +156,67 @@ export default function CreatorOnboardScreen() {
                 placeholderTextColor="#9ca3af"
                 autoCapitalize="none"
                 autoCorrect={false}
-                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-6"
+                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-4"
                 style={{
                   borderWidth: 1,
                   borderColor: "rgba(0,0,0,0.05)",
                 }}
               />
 
-              {/* Benefits */}
-              <View className="bg-gray-50 rounded-2xl p-4 mb-8" style={{ borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" }}>
-                <Text className="text-black font-semibold mb-3">What you get</Text>
+              {/* Follower Count */}
+              <Text className="text-black font-medium mb-2">Follower Count</Text>
+              <TextInput
+                value={followerCount}
+                onChangeText={setFollowerCount}
+                placeholder="25000"
+                placeholderTextColor="#9ca3af"
+                keyboardType="number-pad"
+                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-4"
+                style={{
+                  borderWidth: 1,
+                  borderColor: "rgba(0,0,0,0.05)",
+                }}
+              />
 
-                <View className="flex-row items-center mb-3">
-                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
-                    <CheckCircle size={16} color="#16a34a" />
-                  </View>
-                  <Text className="text-gray-600 text-sm flex-1">Your own creator profile</Text>
-                </View>
-
-                <View className="flex-row items-center mb-3">
-                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
-                    <Users size={16} color="#16a34a" />
-                  </View>
-                  <Text className="text-gray-600 text-sm flex-1">Direct bookings from local businesses</Text>
-                </View>
-
-                <View className="flex-row items-center">
-                  <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3">
-                    <BarChart3 size={16} color="#16a34a" />
-                  </View>
-                  <Text className="text-gray-600 text-sm flex-1">Set your own prices</Text>
-                </View>
-              </View>
+              {/* Photo URL */}
+              <Text className="text-black font-medium mb-2">Profile Photo URL <Text className="text-gray-400 font-normal">(optional)</Text></Text>
+              <TextInput
+                value={photoUrl}
+                onChangeText={setPhotoUrl}
+                placeholder="https://..."
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-2"
+                style={{
+                  borderWidth: 1,
+                  borderColor: "rgba(0,0,0,0.05)",
+                }}
+              />
+              <Text className="text-gray-400 text-xs mb-6">
+                Paste a link to your profile photo. You can use your Instagram profile picture URL.
+              </Text>
             </Animated.View>
 
             <View className="pb-8">
               <PillButton
                 title="Continue"
-                onPress={handleConnectInstagram}
+                onPress={handleContinueToConfirm}
                 variant="black"
                 size="lg"
-                disabled={!instagramHandle.trim() || !email.trim()}
+                disabled={!email.trim() || !name.trim() || !instagramHandle.trim() || !followerCount.trim() || parsedFollowers < 100}
               />
+              {parsedFollowers > 0 && parsedFollowers < 100 && (
+                <Text className="text-red-500 text-xs text-center mt-2">
+                  Minimum 100 followers required
+                </Text>
+              )}
             </View>
           </ScrollView>
         )}
 
-        {/* Confirm Profile Step */}
-        {step === "confirm" && igData && (
+        {/* Step 2: Confirm Profile */}
+        {step === "confirm" && (
           <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
             <Animated.View entering={FadeInDown.duration(400)} className="mt-4">
               <View className="flex-row items-center mb-2">
@@ -217,26 +243,18 @@ export default function CreatorOnboardScreen() {
               >
                 <View className="items-center mb-4">
                   <Image
-                    source={{ uri: igData.photo }}
+                    source={{ uri: displayPhoto }}
                     className="w-24 h-24 rounded-full mb-3"
                     resizeMode="cover"
                   />
-                  <Text className="text-black text-xl font-bold">{igData.name}</Text>
-                  <Text className="text-gray-500">{igData.handle}</Text>
+                  <Text className="text-black text-xl font-bold">{name}</Text>
+                  <Text className="text-gray-500">{formattedHandle}</Text>
                 </View>
 
                 <View className="flex-row justify-around py-4 border-t border-gray-100">
                   <View className="items-center">
-                    <Text className="text-black text-xl font-bold">{formatFollowers(igData.followers)}</Text>
+                    <Text className="text-black text-xl font-bold">{formatFollowers(parsedFollowers)}</Text>
                     <Text className="text-gray-500 text-sm">Followers</Text>
-                  </View>
-                  <View className="items-center">
-                    <Text className="text-black text-xl font-bold">{igData.engagement}%</Text>
-                    <Text className="text-gray-500 text-sm">Engagement</Text>
-                  </View>
-                  <View className="items-center">
-                    <Text className="text-black text-xl font-bold">{igData.posts}</Text>
-                    <Text className="text-gray-500 text-sm">Posts</Text>
                   </View>
                 </View>
               </View>
@@ -253,19 +271,24 @@ export default function CreatorOnboardScreen() {
                 variant="black"
                 size="lg"
               />
+              <Pressable onPress={() => setStep("info")} className="mt-4 py-2">
+                <Text className="text-gray-500 text-center">Edit my info</Text>
+              </Pressable>
             </View>
           </ScrollView>
         )}
 
-        {/* Pricing Step */}
-        {step === "pricing" && igData && (
+        {/* Step 3: Pricing */}
+        {step === "pricing" && (
           <CreatorPricingStep
-            igData={igData}
+            name={name}
             email={email}
+            instagramHandle={formattedHandle}
+            followerCount={parsedFollowers}
+            photoUrl={displayPhoto}
             onComplete={(creatorId) => {
-              // Login to both auth stores for consistency
-              loginCreator(creatorId, email, igData.name);
-              appStoreLogin(email, "creator", igData.name);
+              loginCreator(creatorId, email, name);
+              appStoreLogin(email, "creator", name);
               router.replace("/creator");
             }}
           />
@@ -277,12 +300,18 @@ export default function CreatorOnboardScreen() {
 
 // Pricing setup component
 function CreatorPricingStep({
-  igData,
+  name,
   email,
+  instagramHandle,
+  followerCount,
+  photoUrl,
   onComplete,
 }: {
-  igData: { handle: string; name: string; photo: string; followers: number; engagement: string };
+  name: string;
   email: string;
+  instagramHandle: string;
+  followerCount: number;
+  photoUrl: string;
   onComplete: (creatorId: string) => void;
 }) {
   const createCreator = useCreateCreator();
@@ -294,7 +323,7 @@ function CreatorPricingStep({
 
   // Suggested price ranges based on follower count
   const getSuggestedRange = (type: "story" | "post" | "reel") => {
-    const base = igData.followers / 1000;
+    const base = followerCount / 1000;
     switch (type) {
       case "story":
         return { min: Math.max(25, Math.floor(base * 0.8)), max: Math.floor(base * 2) };
@@ -330,12 +359,12 @@ function CreatorPricingStep({
       // Create creator in database
       const creator = await createCreator.mutateAsync({
         email: email,
-        name: igData.name,
-        instagram_handle: igData.handle,
-        photo: igData.photo,
-        follower_count: igData.followers,
-        engagement_rate: parseFloat(igData.engagement),
-        bio: `${igData.handle} on Instagram`,
+        name: name,
+        instagram_handle: instagramHandle,
+        photo: photoUrl,
+        follower_count: followerCount,
+        engagement_rate: 0, // Can be added later
+        bio: `${instagramHandle} on Instagram`,
         story_price: storyPrice,
         post_price: postPrice,
         reel_price: reelPrice,
@@ -380,7 +409,7 @@ function CreatorPricingStep({
     <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
       <Animated.View entering={FadeInDown.duration(400)} className="mt-4">
         <View className="w-12 h-12 bg-black rounded-xl items-center justify-center mb-4">
-          <Sparkles size={24} color="#fff" />
+          <DollarSign size={24} color="#fff" />
         </View>
 
         <Text className="text-black text-2xl font-bold mb-2">
@@ -454,7 +483,7 @@ function CreatorPricingStep({
   );
 }
 
-// Pricing card component - fun and intuitive!
+// Pricing card component
 function PricingCard({
   label,
   description,
@@ -472,7 +501,6 @@ function PricingCard({
   suggestedMin: number;
   suggestedMax: number;
 }) {
-  // Fixed absolute limits - users can set any price they want within reason
   const absoluteMin = 5;
   const absoluteMax = 1000;
 
@@ -514,7 +542,7 @@ function PricingCard({
 
       {/* Price Control */}
       <View className="flex-row items-center justify-between bg-gray-50 rounded-xl p-2">
-        {/* Minus Button with Laser */}
+        {/* Minus Button */}
         <LaserButton onPress={handleDecrease} variant="white" size={56} borderRadius={12}>
           <Text className="text-2xl font-bold text-gray-400">−</Text>
         </LaserButton>
@@ -527,7 +555,7 @@ function PricingCard({
           </Text>
         </View>
 
-        {/* Plus Button with Laser */}
+        {/* Plus Button */}
         <LaserButton onPress={handleIncrease} variant="black" size={56} borderRadius={12}>
           <Text className="text-2xl font-bold text-white">+</Text>
         </LaserButton>
