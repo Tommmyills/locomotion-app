@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert } from "react-native";
+import { View, Text, Pressable, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { Instagram, ArrowLeft, CheckCircle, Users, DollarSign, Sparkles, Clock, Image as ImageIcon, Film, Camera } from "lucide-react-native";
+import { Instagram, ArrowLeft, CheckCircle, Users, DollarSign, Sparkles, Clock, Image as ImageIcon, Film, Camera, Plus } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { LaserButton } from "@/components/LaserButton";
 import { useCreateCreator, useCreateSlots, useCreatorByEmail } from "@/lib/db-hooks";
@@ -11,6 +11,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/lib/auth-store";
 import useAppStore from "@/lib/state/app-store";
 import * as Haptics from "expo-haptics";
+import { pickImage } from "@/lib/file-picker";
+import { uploadFile } from "@/lib/upload";
 
 type OnboardStep = "info" | "confirm" | "pricing";
 
@@ -34,6 +36,29 @@ export default function CreatorOnboardScreen() {
   const [instagramHandle, setInstagramHandle] = useState("");
   const [followerCount, setFollowerCount] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [localPhotoUri, setLocalPhotoUri] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  const handlePickPhoto = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const file = await pickImage();
+    if (!file) return;
+
+    setLocalPhotoUri(file.uri);
+    setIsUploadingPhoto(true);
+
+    try {
+      const result = await uploadFile(file.uri, file.filename, file.mimeType);
+      setPhotoUrl(result.url);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      Alert.alert("Upload Failed", "Could not upload photo. Please try again.");
+      setLocalPhotoUri("");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const handleContinueToConfirm = () => {
     if (!email.trim() || !name.trim() || !instagramHandle.trim() || !followerCount.trim()) return;
@@ -178,24 +203,54 @@ export default function CreatorOnboardScreen() {
                 }}
               />
 
-              {/* Photo URL */}
-              <Text className="text-black font-medium mb-2">Profile Photo URL <Text className="text-gray-400 font-normal">(optional)</Text></Text>
-              <TextInput
-                value={photoUrl}
-                onChangeText={setPhotoUrl}
-                placeholder="https://..."
-                placeholderTextColor="#9ca3af"
-                autoCapitalize="none"
-                autoCorrect={false}
-                className="bg-gray-50 rounded-xl px-4 py-4 text-black text-lg mb-2"
-                style={{
-                  borderWidth: 1,
-                  borderColor: "rgba(0,0,0,0.05)",
-                }}
-              />
-              <Text className="text-gray-400 text-xs mb-6">
-                Paste a link to your profile photo. You can use your Instagram profile picture URL.
-              </Text>
+              {/* Profile Photo */}
+              <Text className="text-black font-medium mb-2">Profile Photo <Text className="text-gray-400 font-normal">(optional)</Text></Text>
+              <Pressable
+                onPress={handlePickPhoto}
+                disabled={isUploadingPhoto}
+                className="mb-6"
+              >
+                <View
+                  className="bg-gray-50 rounded-xl p-4 flex-row items-center"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {localPhotoUri || photoUrl ? (
+                    <Image
+                      source={{ uri: localPhotoUri || photoUrl }}
+                      className="w-16 h-16 rounded-full"
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View className="w-16 h-16 rounded-full bg-gray-200 items-center justify-center">
+                      <Plus size={24} color="#9ca3af" />
+                    </View>
+                  )}
+                  <View className="ml-4 flex-1">
+                    {isUploadingPhoto ? (
+                      <>
+                        <View className="flex-row items-center">
+                          <ActivityIndicator size="small" color="#000" />
+                          <Text className="text-black font-medium ml-2">Uploading...</Text>
+                        </View>
+                        <Text className="text-gray-400 text-sm mt-1">Please wait</Text>
+                      </>
+                    ) : photoUrl ? (
+                      <>
+                        <Text className="text-black font-medium">Photo Added</Text>
+                        <Text className="text-gray-400 text-sm mt-1">Tap to change</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text className="text-black font-medium">Add a photo</Text>
+                        <Text className="text-gray-400 text-sm mt-1">Tap to select from your library</Text>
+                      </>
+                    )}
+                  </View>
+                </View>
+              </Pressable>
             </Animated.View>
 
             <View className="pb-8">
