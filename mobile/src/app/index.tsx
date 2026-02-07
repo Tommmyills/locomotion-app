@@ -19,7 +19,10 @@ export default function SplashScreenPage() {
   const currentUser = useAppStore((s) => s.currentUser);
   const creatorId = useAuthStore((s) => s.creatorId);
 
+  console.log("[Splash] Mounted - isReady:", isReady, "creatorId:", creatorId, "isAppAuthenticated:", isAppAuthenticated);
+
   const handleImageLoad = () => {
+    console.log("[Splash] Image loaded, setting ready");
     setIsReady(true);
     SplashScreen.hideAsync();
   };
@@ -27,17 +30,20 @@ export default function SplashScreenPage() {
   useEffect(() => {
     if (!isReady) return;
 
+    console.log("[Splash] Ready, navigating...");
     // Navigate after a short delay
     const timer = setTimeout(() => {
       try {
         // Check if creator is logged in via authStore (Supabase-backed)
         if (creatorId) {
+          console.log("[Splash] Navigating to /creator");
           router.replace("/creator");
           return;
         }
 
         // Check if user is logged in via appStore
         if (isAppAuthenticated && currentUser) {
+          console.log("[Splash] User role:", currentUser.role);
           if (currentUser.role === "business") {
             router.replace("/business");
           } else if (currentUser.role === "creator") {
@@ -51,9 +57,10 @@ export default function SplashScreenPage() {
         }
 
         // Not logged in, go to home
+        console.log("[Splash] Not logged in, navigating to /home");
         router.replace("/home");
       } catch (error) {
-        console.error("Navigation error:", error);
+        console.error("[Splash] Navigation error:", error);
         router.replace("/home");
       }
     }, 1500);
@@ -63,8 +70,10 @@ export default function SplashScreenPage() {
 
   // Fallback: if image doesn't load in 3 seconds, proceed anyway
   useEffect(() => {
+    console.log("[Splash] Fallback timer started");
     const fallbackTimer = setTimeout(() => {
       if (!isReady) {
+        console.log("[Splash] Fallback triggered - forcing ready state");
         setIsReady(true);
         SplashScreen.hideAsync();
       }
