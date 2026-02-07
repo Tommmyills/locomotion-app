@@ -275,6 +275,7 @@ export function useCreateBooking() {
       slot_type: string;
       date: string;
       price: number;
+      notes?: string;
     }) => {
       // Create booking
       const { data, error } = await supabase

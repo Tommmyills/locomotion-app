@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Image, ActivityIndicator, TextInput } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Calendar, CreditCard, CheckCircle, Clock, Image as LucideImage, Film } from "lucide-react-native";
+import { Calendar, CreditCard, CheckCircle, Clock, Image as LucideImage, Film, FileText } from "lucide-react-native";
 import { PillButton } from "@/components/PillButton";
 import { useCreator, useCreateSlot, useCreateBooking } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
@@ -45,6 +45,7 @@ export default function BookingConfirmScreen() {
   const createBooking = useCreateBooking();
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [notes, setNotes] = useState("");
 
   if (isLoading) {
     return (
@@ -101,6 +102,7 @@ export default function BookingConfirmScreen() {
         slot_type: type,
         date: date,
         price: slotPrice,
+        notes: notes.trim() || undefined,
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -205,9 +207,56 @@ export default function BookingConfirmScreen() {
           </View>
         </Animated.View>
 
-        {/* Payment Method */}
+        {/* What to Promote */}
         <Animated.View
           entering={FadeInDown.delay(200).duration(400)}
+          className="px-5 mb-6"
+        >
+          <Text className="text-black font-semibold text-base mb-3">
+            What should they promote?
+          </Text>
+
+          <View
+            className="rounded-2xl bg-gray-50 p-4"
+            style={{
+              borderWidth: 1,
+              borderColor: "rgba(0,0,0,0.05)",
+            }}
+          >
+            <View className="flex-row items-start mb-3">
+              <View className="w-10 h-10 bg-black rounded-xl items-center justify-center mr-3">
+                <FileText size={18} color="#fff" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-black font-medium">Instructions for Creator</Text>
+                <Text className="text-gray-500 text-sm">Tell them what you want featured</Text>
+              </View>
+            </View>
+
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="E.g., Promote our weekend brunch special - mention the $15 mimosa deal and tag @mybusiness"
+              placeholderTextColor="#9ca3af"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              className="bg-white rounded-xl px-4 py-3 text-black text-base"
+              style={{
+                borderWidth: 1,
+                borderColor: "rgba(0,0,0,0.08)",
+                minHeight: 100,
+              }}
+            />
+            <Text className="text-gray-400 text-xs mt-2">
+              Be specific about products, deals, or messages you want included
+            </Text>
+          </View>
+        </Animated.View>
+
+        {/* Payment Method */}
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(400)}
           className="px-5 mb-6"
         >
           <Text className="text-black font-semibold text-base mb-3">
@@ -241,7 +290,7 @@ export default function BookingConfirmScreen() {
 
         {/* Terms */}
         <Animated.View
-          entering={FadeInDown.delay(300).duration(400)}
+          entering={FadeInDown.delay(400).duration(400)}
           className="px-5 mb-6"
         >
           <Text className="text-gray-400 text-xs text-center leading-4">

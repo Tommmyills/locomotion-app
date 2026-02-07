@@ -54,5 +54,6 @@ export interface DbBooking {
   price: number;
   status: "pending" | "completed";
   proof_url: string | null;
+  notes: string | null;
   created_at: string;
 }

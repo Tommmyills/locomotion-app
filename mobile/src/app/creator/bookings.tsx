@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Linking, ActivityIndicator } from "r
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { Calendar, Shield, ExternalLink, ChevronRight, Lightbulb } from "lucide-react-native";
+import { Calendar, Shield, ExternalLink, ChevronRight, Lightbulb, FileText } from "lucide-react-native";
 import { SlotTypeBadge } from "@/components/SlotCard";
 import type { SlotType } from "@/lib/state/app-store";
 import { PillButton } from "@/components/PillButton";
@@ -115,6 +115,27 @@ export default function CreatorBookingsScreen() {
                             </Text>
                           </View>
                         </View>
+
+                        {/* Business Instructions */}
+                        {booking.notes && (
+                          <View
+                            className="bg-gray-50 rounded-xl p-3 mb-4"
+                            style={{
+                              borderWidth: 1,
+                              borderColor: "rgba(0,0,0,0.08)",
+                            }}
+                          >
+                            <View className="flex-row items-center mb-2">
+                              <FileText size={14} color="#000" />
+                              <Text className="text-black font-medium text-xs ml-1">
+                                Business Instructions
+                              </Text>
+                            </View>
+                            <Text className="text-gray-700 text-sm">
+                              {booking.notes}
+                            </Text>
+                          </View>
+                        )}
 
                         {/* Local Post Helper Tips */}
                         {!booking.proof_url && (
