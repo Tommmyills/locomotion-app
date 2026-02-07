@@ -28,7 +28,7 @@ export default function ManageAvailabilityScreen() {
   // Initialize local state from creator data
   React.useEffect(() => {
     if (myCreator && localBlockedDates === null) {
-      setLocalBlockedDates(myCreator.blocked_dates || []);
+      setLocalBlockedDates([]);
     }
   }, [myCreator, localBlockedDates]);
 
@@ -40,7 +40,7 @@ export default function ManageAvailabilityScreen() {
   }, [myBookings]);
 
   const blockedDates = localBlockedDates || [];
-  const hasChanges = JSON.stringify(blockedDates) !== JSON.stringify(myCreator?.blocked_dates || []);
+  const hasChanges = localBlockedDates !== null && localBlockedDates.length > 0;
 
   const handleToggleDate = (date: string) => {
     setLocalBlockedDates((prev) => {

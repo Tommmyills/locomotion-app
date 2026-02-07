@@ -81,7 +81,6 @@ export function useCreateCreator() {
           ...creator,
           city: "Albuquerque",
           approved: true,
-          blocked_dates: [],
         })
         .select()
         .single();

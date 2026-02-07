@@ -51,7 +51,7 @@ export default function CreatorProfileScreen() {
   const isLoading = creatorLoading || bookingsLoading;
 
   // Get blocked and booked dates
-  const blockedDates = useMemo(() => creator?.blocked_dates || [], [creator]);
+  const blockedDates: string[] = [];
   const bookedDates = useMemo(() => {
     return bookings
       .filter((b) => b.status === "pending" || b.status === "completed")
