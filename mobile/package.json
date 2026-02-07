@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@better-auth/expo": "^1.4.18",
     "@bottom-tabs/react-navigation": "^0.12.2",
     "@codeherence/react-native-header": "^1.0.0",
     "@expo/html-elements": "^0.13.7",
@@ -42,6 +43,7 @@
     "@supabase/supabase-js": "^2.94.1",
     "@tanstack/react-query": "5.90.2",
     "@vibecodeapp/sdk": "^0.4.14",
+    "better-auth": "^1.4.18",
     "burnt": "^0.13.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -125,6 +127,7 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-mask-text": "^0.15.0",
     "react-native-mmkv": "^3.2.0",
+    "react-native-otp-entry": "^1.8.5",
     "react-native-pager-view": "6.7.1",
     "react-native-purchases": "^9.6.7",
     "react-native-purchases-ui": "^9.6.7",
