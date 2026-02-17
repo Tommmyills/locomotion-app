@@ -8,7 +8,6 @@ import { PillButton } from "@/components/PillButton";
 import { useCreatorByEmail, useCreatorBookings } from "@/lib/db-hooks";
 import { useAuthStore } from "@/lib/auth-store";
 import useAppStore from "@/lib/state/app-store";
-import { authClient } from "@/lib/auth/auth-client";
 import * as Haptics from "expo-haptics";
 
 export default function CreatorDashboardScreen() {
@@ -56,12 +55,11 @@ export default function CreatorDashboardScreen() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     logoutCreator();
     logout();
-    await authClient.signOut();
-    // Stack.Protected will auto-redirect to sign-in
+    router.replace("/home");
   };
 
   const handleManageSlots = () => {

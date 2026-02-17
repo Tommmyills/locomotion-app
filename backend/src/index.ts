@@ -4,15 +4,8 @@ import { cors } from "hono/cors";
 import "./env";
 import { sampleRouter } from "./routes/sample";
 import { logger } from "hono/logger";
-import { auth } from "./auth";
 
-// Type the Hono app with user/session variables
-const app = new Hono<{
-  Variables: {
-    user: typeof auth.$Infer.Session.user | null;
-    session: typeof auth.$Infer.Session.session | null;
-  };
-}>();
+const app = new Hono();
 
 // CORS middleware - validates origin against allowlist
 const allowed = [
@@ -35,32 +28,8 @@ app.use(
 // Logging
 app.use("*", logger());
 
-// Auth middleware - populates user/session for all routes
-app.use("*", async (c, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session) {
-    c.set("user", null);
-    c.set("session", null);
-    await next();
-    return;
-  }
-  c.set("user", session.user);
-  c.set("session", session.session);
-  await next();
-});
-
-// Mount auth handler
-app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
-
 // Health check endpoint
 app.get("/health", (c) => c.json({ status: "ok" }));
-
-// Get current user endpoint
-app.get("/api/me", (c) => {
-  const user = c.get("user");
-  if (!user) return c.body(null, 401);
-  return c.json({ user });
-});
 
 // File upload endpoint
 app.post("/api/upload", async (c) => {
